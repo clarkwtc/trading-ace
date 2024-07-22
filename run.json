@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "type": "go",
+            "name": "findAverage",
+            "goExecPath": "/usr/local/go/bin/go",
+            "buildParams": [
+                "$PROJECT_DIR$/main.go"
+            ],
+            "runParams": [
+                "1",
+                "2",
+                "3"
+            ]
+        }
+    ]
+}
