@@ -1,8 +1,10 @@
 package trading
 
 import (
+    "github.com/spf13/viper"
+    "log"
     "math/big"
-    "time"
+    "strings"
 )
 
 type CampaignMode int
@@ -12,35 +14,41 @@ const (
     CurrentActiveMode
 )
 
-func IsCampaignMode(mode CampaignMode) bool {
+func ParseCampaignModeName(mode CampaignMode) string {
     switch mode {
-    case PastBacktestMode, CurrentActiveMode:
-        return true
+    case PastBacktestMode:
+        return "PastBacktestMode"
+    case CurrentActiveMode:
+        return "CurrentActiveMode"
     default:
-        return false
+        log.Fatalf("Not support mode %v", mode)
     }
+    return ""
+}
+
+func ParseCampaignMode(modeName string) CampaignMode {
+    modeName = strings.ToLower(modeName)
+    switch modeName {
+    case strings.ToLower("PastBacktestMode"):
+        return PastBacktestMode
+    case strings.ToLower("CurrentActiveMode"):
+        return CurrentActiveMode
+    default:
+        log.Fatalf("Not support mode %v", modeName)
+    }
+    return -1
 }
 
 type Campaign struct {
-    StartTime      time.Time
-    Period         time.Time
     Mode           CampaignMode
     OnBoardingTask *OnBoardingTask
     SharePoolTask  *SharePoolTask
     Users          []*User
 }
 
-const week = 7
-
-func NewCampaign(startTime time.Time) *Campaign {
-    now := time.Now()
-    campaignMode := PastBacktestMode
-    if now.After(startTime) {
-        campaignMode = CurrentActiveMode
-    }
-
-    period := now.AddDate(0, 0, week*4)
-    return &Campaign{StartTime: startTime, Period: period, Mode: campaignMode, OnBoardingTask: NewOnBoardingTask(), SharePoolTask: NewSharePoolTask()}
+func NewCampaign() *Campaign {
+    campaignMode := ParseCampaignMode(viper.GetString("campaign_mode"))
+    return &Campaign{Mode: campaignMode, OnBoardingTask: NewOnBoardingTask(), SharePoolTask: NewSharePoolTask()}
 }
 
 func (campaign *Campaign) Swap(address string, evnet *Event) {

@@ -1,0 +1,14 @@
+database:
+  host: "localhost"
+  user: "postgres"
+  password: "test159"
+  name: "trading_ace"
+  port: 5432
+  sslmode: "disable"
+  timezone: "Asia/Taipei"
+
+server:
+  port: 8080
+
+campaign:
+  starttime: "2024-07-23T08:00:00"

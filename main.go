@@ -2,21 +2,20 @@ package main
 
 import (
     "fmt"
-    "github.com/google/uuid"
-    "math/big"
-    "time"
-    "tradingACE/main/trading"
+    "github.com/gin-gonic/gin"
+    "tradingACE/main/infrastructure/endpoints"
+    "tradingACE/main/infrastructure/postgres"
+    "tradingACE/main/infrastructure/server"
 )
 
 func main() {
-    campaign := trading.NewCampaign(time.Now())
-
-    uid := uuid.New().String()
-    amount0 := new(big.Int).SetInt64(2000)
-    amount1 := new(big.Int).SetInt64(900)
-    campaign.Swap(uid, &trading.Event{Amount0Out: amount0, Amount1Out: amount1, To: uid})
-    user := campaign.GetUserByAddress(uid)
-    campaign.Settlement(new(big.Int).SetInt64(2000))
-
-    fmt.Println(user)
+    server.InitConfig()
+    client := postgres.Init()
+    router := endpoints.Router{Engine: gin.Default(), PostgreSQLClient: client}
+    router.SetupErrorMiddleware()
+    router.SetupUserResource()
+    err := router.Engine.Run(fmt.Sprintf(":%d", server.SystemConfig.Server.Port))
+    if err != nil {
+        return
+    }
 }
