@@ -51,10 +51,14 @@ func NewCampaign() *Campaign {
     return &Campaign{Mode: campaignMode, OnBoardingTask: NewOnBoardingTask(), SharePoolTask: NewSharePoolTask()}
 }
 
+func (campaign *Campaign) AddUsers(user *User) {
+    campaign.Users = append(campaign.Users, user)
+}
+
 func (campaign *Campaign) Swap(address string, evnet *Event) {
     user := campaign.GetUserByAddress(address)
     if user == nil {
-        user = NewUser(address, &TaskProcessing{campaign.OnBoardingTask.Name, OnGoing})
+        user = NewUser(address)
     }
     campaign.Users = append(campaign.Users, user)
 

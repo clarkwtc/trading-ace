@@ -8,11 +8,11 @@ type SharePoolTask struct {
     BaseTask
 }
 
-const sharePoolTaskName = "SharePoolTask"
+const SharePoolTaskName = "SharePoolTask"
 
 func NewSharePoolTask() *SharePoolTask {
     task := &SharePoolTask{}
-    task.BaseTask = BaseTask{sharePoolTaskName, 10000, task}
+    task.BaseTask = BaseTask{SharePoolTaskName, 10000, task}
     return task
 }
 
@@ -34,7 +34,7 @@ func (task *SharePoolTask) Complete(user *User, allUsersSwapAmount *big.Int) {
 
 func (task *SharePoolTask) isCompletedPredecessorTasks(user *User) bool {
     for _, record := range user.PointHistory {
-        if record.TaskName == "OnBoardingTask" {
+        if record.TaskName == SharePoolTaskName {
             return true
         }
     }
@@ -42,8 +42,7 @@ func (task *SharePoolTask) isCompletedPredecessorTasks(user *User) bool {
 }
 
 func (task *SharePoolTask) reward(user *User, allUsersSwapAmount *big.Int) {
-    diffAmount := new(big.Int).Sub(user.TotalAmount, user.GetTotalAmountOfPointHistory())
-    rewardPoint := task.getRewardPoint(diffAmount, allUsersSwapAmount)
+    rewardPoint := task.getRewardPoint(user.TotalAmount, allUsersSwapAmount)
     user.AddPoints(rewardPoint)
-    user.AddRewardRecord(task.Name, rewardPoint, diffAmount)
+    user.AddRewardRecord(task.Name, rewardPoint)
 }

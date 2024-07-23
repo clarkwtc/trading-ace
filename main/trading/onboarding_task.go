@@ -6,11 +6,12 @@ type OnBoardingTask struct {
     BaseTask
 }
 
+const OnBoardingTaskName = "OnBoardingTask"
 const requiredSwapAmount = 1000
 
 func NewOnBoardingTask() *OnBoardingTask {
     task := &OnBoardingTask{}
-    task.BaseTask = BaseTask{"OnBoardingTask", 100, task}
+    task.BaseTask = BaseTask{OnBoardingTaskName, 100, task}
     return task
 }
 
@@ -32,6 +33,7 @@ func (task *OnBoardingTask) isRequiredAmount(user *User, event *Event) bool {
 
 func (task *OnBoardingTask) reward(user *User) {
     user.AddPoints(task.getRewardPoint())
-    user.AddRewardRecord(task.Name, task.getRewardPoint(), new(big.Int).SetInt64(requiredSwapAmount))
-    user.ChangeSharePoolTask("SharePoolTask")
+    user.AddRewardRecord(task.Name, task.getRewardPoint())
+    user.CompleteTask()
+    user.ChangeSharePoolTask()
 }
