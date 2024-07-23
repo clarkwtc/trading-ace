@@ -48,14 +48,14 @@ func InitConfig() {
 
 func setCampaignMode() {
     campaignMode := trading.PastBacktestMode
-    layout := "2006-01-02T15:00:00"
+    layout := "2006-01-02T15:04:05-07:00"
     startTime, err := time.Parse(layout, SystemConfig.Campaign.StartTime)
     if err != nil {
         log.Fatalf("Error parsing start time: %v", err)
     }
 
     now := time.Now()
-    if now.After(startTime) {
+    if now.Before(startTime) {
         campaignMode = trading.CurrentActiveMode
     }
 

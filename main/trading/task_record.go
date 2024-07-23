@@ -1,6 +1,7 @@
 package trading
 
 import (
+    "github.com/google/uuid"
     "log"
     "math/big"
     "strings"
@@ -39,6 +40,7 @@ func ParseTaskStatus(modeName string) TaskStatus {
 }
 
 type TaskRecord struct {
+    Id     uuid.UUID
     Name   string
     Status TaskStatus
     Amount *big.Int
@@ -46,18 +48,27 @@ type TaskRecord struct {
 }
 
 func NewOnBoardingTaskRecord(amount *big.Int, points int) *TaskRecord {
-    return &TaskRecord{OnBoardingTaskName, OnGoing, amount, points}
+    return &TaskRecord{uuid.New(), OnBoardingTaskName, OnGoing, amount, points}
 }
 
 func NewSharePoolTaskRecord(amount *big.Int, points int) *TaskRecord {
-    return &TaskRecord{SharePoolTaskName, OnGoing, amount, points}
+    return &TaskRecord{uuid.New(), SharePoolTaskName, OnGoing, amount, points}
 }
 
-func (t *TaskRecord) Clone() *TaskRecord {
+func (taskRecord *TaskRecord) Clone() *TaskRecord {
     return &TaskRecord{
-        Name:   t.Name,
-        Status: t.Status,
-        Amount: t.Amount,
-        Points: t.Points,
+        Id:     taskRecord.Id,
+        Name:   taskRecord.Name,
+        Status: taskRecord.Status,
+        Amount: taskRecord.Amount,
+        Points: taskRecord.Points,
     }
+}
+
+func (taskRecord *TaskRecord) AddPoints(point int) {
+    taskRecord.Points += point
+}
+
+func (taskRecord *TaskRecord) AddAmount(amount *big.Int) {
+    taskRecord.Amount = new(big.Int).Add(taskRecord.Amount, amount)
 }

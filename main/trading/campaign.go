@@ -62,7 +62,7 @@ func (campaign *Campaign) Swap(address string, evnet *Event) {
     }
     campaign.Users = append(campaign.Users, user)
 
-    user.AddAmount(evnet.Amount0Out)
+    user.AddAmount(campaign.OnBoardingTask.Name, evnet.Amount0Out)
     campaign.OnBoardingTask.Complete(user, evnet)
 }
 

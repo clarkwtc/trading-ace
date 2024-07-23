@@ -9,8 +9,8 @@ type GetUserPointsHistoryQuery struct {
     UserRepository trading.UserRepository
 }
 
-func (usecase *GetUserPointsHistoryQuery) Execute(address string) *events.UserEvent {
-    user := usecase.UserRepository.FindUserRewardByAddress(address)
+func (query *GetUserPointsHistoryQuery) Execute(address string) *events.UserEvent {
+    user := query.UserRepository.FindUserRewardByAddress(address)
     if user == nil {
         return nil
     }

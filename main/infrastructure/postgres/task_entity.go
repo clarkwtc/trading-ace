@@ -1,6 +1,8 @@
 package postgres
 
+
 type TaskEntity struct {
-    Id   int
+    Id   string
     Name string
 }
+

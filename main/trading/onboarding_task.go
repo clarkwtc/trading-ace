@@ -32,8 +32,8 @@ func (task *OnBoardingTask) isRequiredAmount(user *User, event *Event) bool {
 }
 
 func (task *OnBoardingTask) reward(user *User) {
-    user.AddPoints(task.getRewardPoint())
+    user.AddPoints(task.Name, task.getRewardPoint())
     user.AddRewardRecord(task.Name, task.getRewardPoint())
-    user.CompleteTask()
-    user.ChangeSharePoolTask()
+    user.CompleteTask(task.Name)
+    user.NextTask(task.Name, SharePoolTaskName)
 }

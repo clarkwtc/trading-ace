@@ -11,5 +11,5 @@ type BaseTask struct {
 }
 
 func (task *BaseTask) IsTargetTask(user *User) bool {
-    return user.CurrentTask.Name == task.Name && user.CurrentTask.Status == OnGoing
+    return user.GetTask(task.Name, OnGoing) != nil
 }

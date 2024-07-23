@@ -9,8 +9,8 @@ type GetUserTasksStatusQuery struct {
     UserRepository trading.UserRepository
 }
 
-func (usecase *GetUserTasksStatusQuery) Execute(address string) *events.UserEvent {
-    user := usecase.UserRepository.FindUserTasksByAddress(address)
+func (query *GetUserTasksStatusQuery) Execute(address string) *events.UserEvent {
+    user := query.UserRepository.FindUserTasksByAddress(address)
     if user == nil {
         return nil
     }

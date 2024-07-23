@@ -33,8 +33,8 @@ func (task *SharePoolTask) Complete(user *User, allUsersSwapAmount *big.Int) {
 }
 
 func (task *SharePoolTask) isCompletedPredecessorTasks(user *User) bool {
-    for _, record := range user.PointHistory {
-        if record.TaskName == SharePoolTaskName {
+    for _, taskRecord := range user.Tasks {
+        if taskRecord.Name == OnBoardingTaskName && taskRecord.Status == Completed {
             return true
         }
     }
@@ -43,6 +43,7 @@ func (task *SharePoolTask) isCompletedPredecessorTasks(user *User) bool {
 
 func (task *SharePoolTask) reward(user *User, allUsersSwapAmount *big.Int) {
     rewardPoint := task.getRewardPoint(user.TotalAmount, allUsersSwapAmount)
-    user.AddPoints(rewardPoint)
+    user.AddPoints(task.Name, rewardPoint)
     user.AddRewardRecord(task.Name, rewardPoint)
+    user.CompleteTask(task.Name)
 }

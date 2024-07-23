@@ -13,6 +13,7 @@ func main() {
     client := postgres.Init()
     router := endpoints.Router{Engine: gin.Default(), PostgreSQLClient: client}
     router.SetupUserResource()
+    go router.StartCampaign()
     err := router.Engine.Run(fmt.Sprintf(":%d", server.SystemConfig.Server.Port))
     if err != nil {
         return
