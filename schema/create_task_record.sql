@@ -1,7 +1,6 @@
 CREATE TABLE TaskRecord
 (
     id         SERIAL PRIMARY KEY,
-    name       VARCHAR(255) NOT NULL,
     user_id    INTEGER      NOT NULL,
     task_id    INTEGER      NOT NULL,
     status     VARCHAR(255) NOT NULL,

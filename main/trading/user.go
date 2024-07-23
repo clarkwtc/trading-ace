@@ -1,6 +1,9 @@
 package trading
 
-import "math/big"
+import (
+    "math/big"
+    "time"
+)
 
 type User struct {
     Address      string
@@ -30,7 +33,7 @@ func (user *User) AddAmount(amount *big.Int) {
 }
 
 func (user *User) AddRewardRecord(taskName string, point int) {
-    user.PointHistory = append(user.PointHistory, &RewardRecord{taskName, point})
+    user.PointHistory = append(user.PointHistory, &RewardRecord{taskName, point, time.Now()})
 }
 
 func (user *User) ChangeSharePoolTask() {

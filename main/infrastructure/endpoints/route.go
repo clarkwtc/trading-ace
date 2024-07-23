@@ -18,5 +18,11 @@ func (router *Router) SetupUserResource() {
     userRoutes := router.Engine.Group("/users")
     {
         userRoutes.GET("/:address/getTaskStatus", userEndpoints.GetUserTasksStatus)
+        userRoutes.GET("/:address/getPointsHistory", userEndpoints.GetUserPointsHistory)
     }
+}
+
+func (router *Router) SetupErrorMiddleware() {
+    errorMiddleware := ErrorMiddleware{}
+    router.Engine.Use(errorMiddleware.Execute())
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type TaskRecordEntity struct {
-    Name      string
+    Id        int
     UserId    int
     TaskId    int
     Status    string
@@ -17,6 +17,6 @@ type TaskRecordEntity struct {
     UpdatedAt time.Time
 }
 
-func ToTaskRecord(entity *TaskRecordEntity) *trading.TaskRecord {
-    return &trading.TaskRecord{Name: entity.Name, Status: trading.ParseTaskStatus(entity.Status), Amount: new(big.Int).SetBytes(entity.Amount), Points: entity.Points}
+func ToTaskRecord(taskRecordEntity *TaskRecordEntity, taskEntity *TaskEntity) *trading.TaskRecord {
+    return &trading.TaskRecord{Name: taskEntity.Name, Status: trading.ParseTaskStatus(taskRecordEntity.Status), Amount: new(big.Int).SetBytes(taskRecordEntity.Amount), Points: taskRecordEntity.Points}
 }
