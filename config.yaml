@@ -1,5 +1,5 @@
 database:
-  host: "localhost"#postgres
+  host: "postgres" #localhost
   user: "postgres"
   password: "test159"
   name: "trading_ace"
