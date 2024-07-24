@@ -1,5 +1,5 @@
 database:
-  host: "localhost"
+  host: "localhost"#postgres
   user: "postgres"
   password: "test159"
   name: "trading_ace"
@@ -11,4 +11,7 @@ server:
   port: 8080
 
 campaign:
-  starttime: "2024-07-23T08:00:00"
+  starttime: "2024-07-24T16:35:00+08:00"
+
+ethereum:
+  url: wss://mainnet.infura.io/ws/v3/{your_project_key}

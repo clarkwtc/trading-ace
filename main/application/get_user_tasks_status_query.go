@@ -12,7 +12,7 @@ type GetUserTasksStatusQuery struct {
 func (query *GetUserTasksStatusQuery) Execute(address string) *events.UserEvent {
     user := query.UserRepository.FindUserTasksByAddress(address)
     if user == nil {
-        return nil
+        return &events.UserEvent{}
     }
 
     return &events.UserEvent{User: user}

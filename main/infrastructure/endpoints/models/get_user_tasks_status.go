@@ -15,6 +15,9 @@ type TaskStatusViewModel struct {
 func ToTaskStatusViewModel(event *events.UserEvent) []*TaskStatusViewModel {
     user := event.User
     result := make([]*TaskStatusViewModel, 0)
+    if user == nil {
+        return result
+    }
     for _, task := range user.Tasks {
         item := &TaskStatusViewModel{
             Name: task.Name, Status: trading.ParseTaskStatusName(task.Status),

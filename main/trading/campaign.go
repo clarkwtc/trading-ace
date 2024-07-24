@@ -52,18 +52,20 @@ func NewCampaign() *Campaign {
 }
 
 func (campaign *Campaign) AddUsers(user *User) {
+    if user == nil {
+        return
+    }
     campaign.Users = append(campaign.Users, user)
 }
 
-func (campaign *Campaign) Swap(address string, evnet *Event) {
+func (campaign *Campaign) Swap(address string, amount *big.Int) {
     user := campaign.GetUserByAddress(address)
     if user == nil {
-        user = NewUser(address)
+        return
     }
-    campaign.Users = append(campaign.Users, user)
 
-    user.AddAmount(campaign.OnBoardingTask.Name, evnet.Amount0Out)
-    campaign.OnBoardingTask.Complete(user, evnet)
+    user.AddAmount(campaign.OnBoardingTask.Name, amount)
+    campaign.OnBoardingTask.Complete(user, amount)
 }
 
 func (campaign *Campaign) Settlement(allUsersSwapAmount *big.Int) {

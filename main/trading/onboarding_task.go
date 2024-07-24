@@ -1,6 +1,9 @@
 package trading
 
-import "math/big"
+import (
+    "math/big"
+    "tradingACE/main/infrastructure/utils"
+)
 
 type OnBoardingTask struct {
     BaseTask
@@ -19,16 +22,16 @@ func (task *OnBoardingTask) getRewardPoint() int {
     return task.RewardPoint
 }
 
-func (task *OnBoardingTask) Complete(user *User, event *Event) {
-    if task.IsTargetTask(user) && task.isRequiredAmount(user, event) {
+func (task *OnBoardingTask) Complete(user *User, amount *big.Int) {
+    if task.IsTargetTask(user) && task.isRequiredAmount(user, amount) {
         task.reward(user)
     }
 }
 
-func (task *OnBoardingTask) isRequiredAmount(user *User, event *Event) bool {
-    sumAmount := new(big.Int).Add(user.TotalAmount, event.Amount0Out)
+func (task *OnBoardingTask) isRequiredAmount(user *User, amount *big.Int) bool {
+    sumAmount := new(big.Int).Add(user.TotalAmount, amount)
     requiredAmount := new(big.Int).SetInt64(requiredSwapAmount)
-    return sumAmount.Cmp(requiredAmount) >= 0
+    return sumAmount.Cmp(utils.ToUSDC(requiredAmount)) >= 0
 }
 
 func (task *OnBoardingTask) reward(user *User) {

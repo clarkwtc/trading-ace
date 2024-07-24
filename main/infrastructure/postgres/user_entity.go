@@ -22,5 +22,6 @@ func ToUser(userEntity *UserEntity) *trading.User {
 }
 
 func ToUserEntity(user *trading.User) *UserEntity {
-    return &UserEntity{Id: user.Id.String(), Address: user.Address, Amount: user.TotalAmount.String(), Points: user.TotalPoints, UpdatedAt: time.Now()}
+    now := time.Now()
+    return &UserEntity{Id: user.Id.String(), Address: user.Address, Amount: user.TotalAmount.String(), Points: user.TotalPoints, CreatedAt: now, UpdatedAt: now}
 }

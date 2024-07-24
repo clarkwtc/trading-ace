@@ -14,6 +14,9 @@ type PointsHistoryViewModel struct {
 func ToPointsHistoryViewModel(event *events.UserEvent) []*PointsHistoryViewModel {
     user := event.User
     result := make([]*PointsHistoryViewModel, 0)
+    if user == nil {
+        return result
+    }
     for _, reward := range user.PointHistory {
         item := &PointsHistoryViewModel{reward.TaskName, reward.Points, reward.RewardTime}
 

@@ -24,6 +24,10 @@ type Config struct {
     Campaign struct {
         StartTime string
     }
+
+    Ethereum struct {
+        URL string
+    }
 }
 
 var SystemConfig Config
