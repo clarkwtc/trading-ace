@@ -1,4 +1,4 @@
-CREATE TABLE TaskRecord
+CREATE TABLE IF NOT EXISTS TaskRecord
 (
     id         uuid primary key,
     user_id    uuid         NOT NULL,
