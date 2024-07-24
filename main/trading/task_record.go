@@ -55,16 +55,6 @@ func NewSharePoolTaskRecord(amount *big.Int, points int) *TaskRecord {
     return &TaskRecord{uuid.New(), SharePoolTaskName, OnGoing, amount, points}
 }
 
-func (taskRecord *TaskRecord) Clone() *TaskRecord {
-    return &TaskRecord{
-        Id:     taskRecord.Id,
-        Name:   taskRecord.Name,
-        Status: taskRecord.Status,
-        Amount: taskRecord.Amount,
-        Points: taskRecord.Points,
-    }
-}
-
 func (taskRecord *TaskRecord) AddPoints(point int) {
     taskRecord.Points += point
 }
