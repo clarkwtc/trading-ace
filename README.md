@@ -82,3 +82,6 @@ Stop your docker container
 ```shell script
 docker-compose down
 ```
+
+## System designing diagram
+![alt text](images/TradingAceDesign.png)
