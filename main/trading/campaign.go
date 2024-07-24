@@ -68,10 +68,19 @@ func (campaign *Campaign) Swap(address string, amount *big.Int) {
     campaign.OnBoardingTask.Complete(user, amount)
 }
 
-func (campaign *Campaign) Settlement(allUserAmount *big.Int) {
+func (campaign *Campaign) Settlement() {
+    totalAmount := campaign.sumAllUserAmount()
     for _, user := range campaign.Users {
-        campaign.SharePoolTask.Complete(user, allUserAmount)
+        campaign.SharePoolTask.Complete(user, totalAmount)
     }
+}
+
+func (campaign *Campaign) sumAllUserAmount() *big.Int {
+    sum := new(big.Int).SetInt64(0)
+    for _, user := range campaign.Users {
+        sum.Add(sum, user.TotalAmount)
+    }
+    return sum
 }
 
 func (campaign *Campaign) GetUserByAddress(address string) *User {

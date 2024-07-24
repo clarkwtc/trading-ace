@@ -16,19 +16,19 @@ func NewSharePoolTask() *SharePoolTask {
     return task
 }
 
-func (task *SharePoolTask) getRewardPoint(addedAmount *big.Int, allUsersSwapAmount *big.Int) int {
+func (task *SharePoolTask) getRewardPoint(addedAmount *big.Int, allUserAmount *big.Int) int {
     totalAmountFloat := new(big.Float).SetInt(addedAmount)
-    allUsersSwapAmountFloat := new(big.Float).SetInt(allUsersSwapAmount)
-    sharePoolRatio := new(big.Float).Quo(totalAmountFloat, allUsersSwapAmountFloat)
+    allUserAmountFloat := new(big.Float).SetInt(allUserAmount)
+    sharePoolRatio := new(big.Float).Quo(totalAmountFloat, allUserAmountFloat)
     rewardPoint := new(big.Float).SetInt64(int64(task.RewardPoint))
 
     result, _ := new(big.Float).Mul(sharePoolRatio, rewardPoint).Int64()
     return int(result)
 }
 
-func (task *SharePoolTask) Complete(user *User, allUsersSwapAmount *big.Int) {
+func (task *SharePoolTask) Complete(user *User, allUserAmount *big.Int) {
     if task.IsTargetTask(user) && task.isCompletedPredecessorTasks(user) {
-        task.reward(user, allUsersSwapAmount)
+        task.reward(user, allUserAmount)
     }
 }
 
@@ -41,8 +41,8 @@ func (task *SharePoolTask) isCompletedPredecessorTasks(user *User) bool {
     return false
 }
 
-func (task *SharePoolTask) reward(user *User, allUsersSwapAmount *big.Int) {
-    rewardPoint := task.getRewardPoint(user.TotalAmount, allUsersSwapAmount)
+func (task *SharePoolTask) reward(user *User, allUserAmount *big.Int) {
+    rewardPoint := task.getRewardPoint(user.TotalAmount, allUserAmount)
     user.AddPoints(task.Name, rewardPoint)
     user.AddRewardRecord(task.Name, rewardPoint)
     user.CompleteTask(task.Name)

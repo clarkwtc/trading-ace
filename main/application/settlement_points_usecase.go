@@ -1,7 +1,6 @@
 package application
 
 import (
-    "math/big"
     "tradingACE/main/trading"
 )
 
@@ -17,7 +16,7 @@ func (usecase *SettlementPointsUsecase) Execute(final bool) {
 
     campaign := trading.NewCampaign()
     campaign.Users = users
-    campaign.Settlement(new(big.Int).SetUint64(100000))
+    campaign.Settlement()
     acceptNextTask(campaign, final)
     usecase.UserRepository.SaveAllUser(users)
 }

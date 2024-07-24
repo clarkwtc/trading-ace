@@ -144,14 +144,18 @@ func TestSettlement(t *testing.T) {
     amount := utils.ToUSDC(new(big.Int).SetInt64(2000))
     campaign.Swap(user.Address, amount)
 
-    allUserAmount := utils.ToUSDC(new(big.Int).SetInt64(100000))
+    user2 := trading.NewUser(uuid.New().String())
+    campaign.AddUsers(user2)
+    amount2 := utils.ToUSDC(new(big.Int).SetInt64(2000))
+    campaign.Swap(user2.Address, amount2)
 
     // When
-    campaign.Settlement(allUserAmount)
+    campaign.Settlement()
 
     // Then
     assert.Equal(t, amount, user.TotalAmount)
-    assert.Equal(t, 300, user.TotalPoints)
+    assert.Equal(t, 5100, user.TotalPoints)
+    assert.Equal(t, 5100, user2.TotalPoints)
 
     assert.Equal(t, 2, len(user.Tasks))
     assert.Equal(t, trading.OnBoardingTaskName, user.Tasks[0].Name)
@@ -162,7 +166,7 @@ func TestSettlement(t *testing.T) {
     assert.Equal(t, trading.SharePoolTaskName, user.Tasks[1].Name)
     assert.Equal(t, trading.Completed, user.Tasks[1].Status)
     assert.Equal(t, amount, user.Tasks[1].Amount)
-    assert.Equal(t, 200, user.Tasks[1].Points)
+    assert.Equal(t, 5000, user.Tasks[1].Points)
 }
 
 func TestGetUserByAddress(t *testing.T) {
