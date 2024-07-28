@@ -3,6 +3,7 @@ package trading
 import (
     "github.com/google/uuid"
     "math/big"
+    "strings"
     "time"
 )
 
@@ -28,6 +29,16 @@ func (user *User) GetTask(name string, status TaskStatus) *TaskRecord {
         }
     }
     return nil
+}
+
+func (user *User) GetTaskByName(name string) []*TaskRecord {
+    var tasks []*TaskRecord
+    for _, task := range user.Tasks {
+        if strings.ToLower(task.Name) == strings.ToLower(name) {
+            tasks = append(tasks, task)
+        }
+    }
+    return tasks
 }
 
 func (user *User) AddPoints(taskName string, point int) {

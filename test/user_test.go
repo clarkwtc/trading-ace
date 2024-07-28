@@ -43,6 +43,21 @@ func TestGetTask(t *testing.T) {
     assert.Equal(t, taskStatus, task.Status)
 }
 
+func TestGetTaskByName(t *testing.T) {
+    // Given
+    address := uuid.New().String()
+    user := trading.NewUser(address)
+
+    taskName := trading.OnBoardingTaskName
+
+    // When
+    task := user.GetTaskByName(taskName)
+
+    // Then
+    assert.Equal(t, true, task != nil)
+    assert.Equal(t, taskName, task[0].Name)
+}
+
 func TestAddPoints(t *testing.T) {
     // Given
     address := uuid.New().String()
