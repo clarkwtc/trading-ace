@@ -31,6 +31,15 @@ func (user *User) GetTask(name string, status TaskStatus) *TaskRecord {
     return nil
 }
 
+func (user *User) GetTaskById(id uuid.UUID) *TaskRecord {
+    for _, task := range user.Tasks {
+        if task.Id == id {
+            return task
+        }
+    }
+    return nil
+}
+
 func (user *User) GetTaskByName(name string) []*TaskRecord {
     var tasks []*TaskRecord
     for _, task := range user.Tasks {
@@ -67,8 +76,8 @@ func (user *User) AddTask(taskRecord *TaskRecord) {
     user.Tasks = append(user.Tasks, taskRecord)
 }
 
-func (user *User) NextTask(previousTask string, newTask string) {
-    task := user.GetTask(previousTask, Completed)
+func (user *User) NextTask(previousTaskId uuid.UUID, newTask string) {
+    task := user.GetTaskById(previousTaskId)
     if task == nil {
         return
     }

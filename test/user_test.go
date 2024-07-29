@@ -142,12 +142,12 @@ func TestNextTask(t *testing.T) {
     // Given
     address := uuid.New().String()
     user := trading.NewUser(address)
-    previousTask := trading.OnBoardingTaskName
-    user.CompleteTask(previousTask)
+    previousTask := user.Tasks[0]
+    user.CompleteTask(trading.OnBoardingTaskName)
     nextTask := trading.SharePoolTaskName
 
     // When
-    user.NextTask(previousTask, nextTask)
+    user.NextTask(previousTask.Id, nextTask)
 
     // Then
     assert.Equal(t, 2, len(user.Tasks))

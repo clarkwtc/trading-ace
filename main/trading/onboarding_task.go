@@ -25,6 +25,9 @@ func (task *OnBoardingTask) getRewardPoint() int {
 func (task *OnBoardingTask) Complete(user *User, amount *big.Int) {
     if task.IsTargetTask(user) && task.isRequiredAmount(user, amount) {
         task.reward(user)
+        taskRecord := user.GetTask(task.Name, OnGoing)
+        user.CompleteTask(task.Name)
+        user.NextTask(taskRecord.Id, SharePoolTaskName)
     }
 }
 
@@ -37,6 +40,4 @@ func (task *OnBoardingTask) isRequiredAmount(user *User, amount *big.Int) bool {
 func (task *OnBoardingTask) reward(user *User) {
     user.AddPoints(task.Name, task.getRewardPoint())
     user.AddRewardRecord(task.Name, task.getRewardPoint())
-    user.CompleteTask(task.Name)
-    user.NextTask(task.Name, SharePoolTaskName)
 }

@@ -1,11 +1,15 @@
 package application
 
 import (
+    "encoding/json"
+    "tradingACE/main/infrastructure/eventhub"
     "tradingACE/main/trading"
+    "tradingACE/main/trading/events"
 )
 
 type SettlementPointsUsecase struct {
     UserRepository trading.UserRepository
+    EventHub       *eventhub.EventHub
 }
 
 func (usecase *SettlementPointsUsecase) Execute(final bool) {
@@ -16,15 +20,10 @@ func (usecase *SettlementPointsUsecase) Execute(final bool) {
 
     campaign := trading.NewCampaign()
     campaign.Users = users
-    campaign.Settlement()
-    acceptNextTask(campaign, final)
+    campaign.Settlement(final)
     usecase.UserRepository.SaveAllUser(users)
-}
 
-func acceptNextTask(campaign *trading.Campaign, final bool) {
-    if !final {
-        for _, user := range campaign.Users {
-            user.NextTask(trading.SharePoolTaskName, trading.SharePoolTaskName)
-        }
-    }
+    event := events.NewSettlementPointsEvent(campaign.Users)
+    eventData, _ := json.Marshal(event)
+    usecase.EventHub.Publish(eventData)
 }

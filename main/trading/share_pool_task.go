@@ -26,9 +26,14 @@ func (task *SharePoolTask) getRewardPoint(addedAmount *big.Int, allUserAmount *b
     return int(result)
 }
 
-func (task *SharePoolTask) Complete(user *User, allUserAmount *big.Int) {
+func (task *SharePoolTask) Complete(user *User, allUserAmount *big.Int, final bool) {
     if task.IsTargetTask(user) && task.isCompletedPredecessorTasks(user) {
         task.reward(user, allUserAmount)
+        taskRecord := user.GetTask(task.Name, OnGoing)
+        user.CompleteTask(task.Name)
+        if !final {
+            user.NextTask(taskRecord.Id, SharePoolTaskName)
+        }
     }
 }
 
@@ -45,5 +50,4 @@ func (task *SharePoolTask) reward(user *User, allUserAmount *big.Int) {
     rewardPoint := task.getRewardPoint(user.TotalAmount, allUserAmount)
     user.AddPoints(task.Name, rewardPoint)
     user.AddRewardRecord(task.Name, rewardPoint)
-    user.CompleteTask(task.Name)
 }

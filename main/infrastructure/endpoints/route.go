@@ -12,6 +12,7 @@ import (
     "tradingACE/main/application"
     "tradingACE/main/infrastructure/contract"
     "tradingACE/main/infrastructure/eth"
+    "tradingACE/main/infrastructure/eventhub"
     "tradingACE/main/infrastructure/postgres"
     "tradingACE/main/infrastructure/repositories"
     "tradingACE/main/infrastructure/server"
@@ -22,6 +23,7 @@ import (
 type Router struct {
     Engine           *gin.Engine
     PostgreSQLClient *sql.DB
+    EventHub         *eventhub.EventHub
 }
 
 func (router *Router) SetupUserResource() {
@@ -32,6 +34,13 @@ func (router *Router) SetupUserResource() {
         userRoutes.GET("/:address/getTaskStatus", userEndpoints.GetUserTasksStatus)
         userRoutes.GET("/:address/getPointsHistory", userEndpoints.GetUserPointsHistory)
         userRoutes.GET("/:address/getLeaderboard", userEndpoints.GetLeaderboard)
+    }
+
+    websocketEndpoints := &WebsocketConnection{router.EventHub}
+
+    wsRoutes := router.Engine.Group("/ws")
+    {
+        wsRoutes.GET("bindConection", websocketEndpoints.BindConnection)
     }
 }
 
@@ -54,7 +63,7 @@ func (router *Router) StartCampaign() {
         go router.settlementPoints()
     })
     time.AfterFunc(duration, func() {
-        go router.WatchSwapEvents()
+        go router.watchSwapEvents()
     })
 }
 
@@ -63,7 +72,7 @@ func (router *Router) settlementPoints() {
     defer ticker.Stop()
 
     repository := repositories.NewUserRepository(postgres.NewUserRepository(router.PostgreSQLClient))
-    query := &application.SettlementPointsUsecase{UserRepository: repository}
+    query := &application.SettlementPointsUsecase{UserRepository: repository, EventHub: router.EventHub}
 
     final := false
     for week := 1; week <= 4; week++ {
@@ -76,7 +85,7 @@ func (router *Router) settlementPoints() {
     }
 }
 
-func (router *Router) WatchSwapEvents() {
+func (router *Router) watchSwapEvents() {
     clientManageer := eth.NewEthClientManager()
     client := clientManageer.Client
 
@@ -117,7 +126,7 @@ func (router *Router) WatchSwapEvents() {
 
 func (router *Router) swap(event *contract.UniswapV2Swap) {
     repository := repositories.NewUserRepository(postgres.NewUserRepository(router.PostgreSQLClient))
-    query := &application.SwapUsecase{UserRepository: repository}
+    query := &application.SwapUsecase{UserRepository: repository, EventHub: router.EventHub}
 
     amount := new(big.Int).SetInt64(0)
     if event.Amount0In.Cmp(amount) == 1 {

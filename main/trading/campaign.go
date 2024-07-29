@@ -68,10 +68,10 @@ func (campaign *Campaign) Swap(address string, amount *big.Int) {
     campaign.OnBoardingTask.Complete(user, amount)
 }
 
-func (campaign *Campaign) Settlement() {
+func (campaign *Campaign) Settlement(final bool) {
     totalAmount := campaign.sumAllUserAmount()
     for _, user := range campaign.Users {
-        campaign.SharePoolTask.Complete(user, totalAmount)
+        campaign.SharePoolTask.Complete(user, totalAmount, final)
     }
 }
 
