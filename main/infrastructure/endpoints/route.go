@@ -35,11 +35,6 @@ func (router *Router) SetupUserResource() {
     }
 }
 
-func (router *Router) SetupErrorMiddleware() {
-    errorMiddleware := ErrorMiddleware{}
-    router.Engine.Use(errorMiddleware.Execute())
-}
-
 func (router *Router) StartCampaign() {
     fmt.Println(viper.Get("campaign_mode"))
     if trading.ParseCampaignMode(viper.GetString("campaign_mode")) != trading.CurrentActiveMode {
