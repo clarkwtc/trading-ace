@@ -2,6 +2,7 @@ package application
 
 import (
     "encoding/json"
+    "log"
     "math/big"
     "tradingACE/main/infrastructure/eventhub"
     "tradingACE/main/trading"
@@ -24,6 +25,9 @@ func (usecase *SwapUsecase) Execute(address string, amount *big.Int) {
     usecase.UserRepository.SaveAllUser(campaign.Users)
 
     event := events.NewSwapEvent(campaign.Users[0], amount)
-    eventData, _ := json.Marshal(event)
+    eventData, err := json.Marshal(event)
+    if err != nil {
+        log.Fatalf("Encode event fail: %v", err)
+    }
     usecase.EventHub.Publish(eventData)
 }

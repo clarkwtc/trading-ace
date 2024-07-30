@@ -2,6 +2,7 @@ package application
 
 import (
     "encoding/json"
+    "log"
     "tradingACE/main/infrastructure/eventhub"
     "tradingACE/main/trading"
     "tradingACE/main/trading/events"
@@ -24,6 +25,9 @@ func (usecase *SettlementPointsUsecase) Execute(final bool) {
     usecase.UserRepository.SaveAllUser(users)
 
     event := events.NewSettlementPointsEvent(campaign.Users)
-    eventData, _ := json.Marshal(event)
+    eventData, err := json.Marshal(event)
+    if err != nil {
+        log.Fatalf("Encode event fail: %v", err)
+    }
     usecase.EventHub.Publish(eventData)
 }
