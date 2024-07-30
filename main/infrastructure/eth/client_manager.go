@@ -7,23 +7,23 @@ import (
     "tradingACE/main/infrastructure/server"
 )
 
-type EthClientManager struct {
+type ClientManager struct {
     context context.Context
     Client  *ethclient.Client
     URL     string
 }
 
-func NewEthClientManager() *EthClientManager {
+func NewClientManager() *ClientManager {
     ctx := context.Background()
     url := server.SystemConfig.Ethereum.URL
     client, err := ethclient.DialContext(ctx, url)
     if err != nil {
         fmt.Println(err)
     }
-    return &EthClientManager{ctx, client, url}
+    return &ClientManager{ctx, client, url}
 }
 
-func (manager *EthClientManager) ReconnectEthClient(url string) {
+func (manager *ClientManager) ReconnectEthClient(url string) {
     manager.Close()
 
     ctx := context.Background()
@@ -37,6 +37,6 @@ func (manager *EthClientManager) ReconnectEthClient(url string) {
     manager.URL = url
 }
 
-func (manager *EthClientManager) Close() {
+func (manager *ClientManager) Close() {
     manager.Client.Close()
 }

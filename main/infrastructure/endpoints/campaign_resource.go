@@ -27,7 +27,7 @@ func NewCampaignResource(repository trading.UserRepository, eventHub *eventhub.E
 }
 
 func (resource *CampaignResource) SettlementPoints() {
-    ticker := time.NewTicker(5*time.Second)
+    ticker := time.NewTicker(24 * time.Hour * 7)
     defer ticker.Stop()
 
     final := false
@@ -42,7 +42,7 @@ func (resource *CampaignResource) SettlementPoints() {
 }
 
 func (resource *CampaignResource) WatchSwapEvents() {
-    clientManageer := eth.NewEthClientManager()
+    clientManageer := eth.NewClientManager()
     client := clientManageer.Client
 
     // Uniswap V2 Pair contract address for WETH/USDC
