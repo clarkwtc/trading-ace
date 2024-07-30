@@ -12,9 +12,11 @@ import (
 func main() {
     server.InitConfig()
     client := postgres.Init()
-    router := endpoints.Router{Engine: gin.Default(), PostgreSQLClient: client, EventHub: eventhub.NewEventHub()}
+    eventHub := eventhub.NewEventHub()
+    router := endpoints.Router{Engine: gin.Default(), PostgreSQLClient: client, EventHub: eventHub}
     router.SetupUserResource()
-    go router.StartCampaign()
+    router.SetupWebsocketConnection()
+    go router.SetupCampaignTimer()
     err := router.Engine.Run(fmt.Sprintf(":%d", server.SystemConfig.Server.Port))
     if err != nil {
         return
