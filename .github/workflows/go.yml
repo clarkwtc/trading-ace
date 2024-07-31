@@ -34,7 +34,7 @@ jobs:
         run: docker-compose up -d
 
       - name: Execute tests in the running services
-        run: docker-compose exec web go test -v ./...
+        run: docker-compose exec -T web go test -v ./...
       
       - name: Tear down Docker Compose services
         if: always()
