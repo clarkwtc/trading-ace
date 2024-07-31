@@ -1,4 +1,4 @@
-name: cleanup caches by a branch
+name: Cleanup caches by a branch
 on:
   pull_request:
     types:
@@ -6,6 +6,7 @@ on:
 
 jobs:
   cleanup:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup
