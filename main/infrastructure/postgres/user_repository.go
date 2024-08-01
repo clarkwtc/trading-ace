@@ -20,12 +20,12 @@ func (repository *UserRepository) FindUserTasksByAddress(address string) *tradin
         return nil
     }
 
-    taskRecords := getTaskRecord(repository.client, address)
-    user.Tasks = taskRecords
+    taskRecords := repository.getTaskRecord(user, address)
+    user.SetTaskRecords(taskRecords)
     return user
 }
 
-func getTaskRecord(client *sql.DB, address string) []*trading.TaskRecord {
+func (repository *UserRepository) getTaskRecord(user *trading.User, address string) []*trading.TaskRecord {
     query := `
     SELECT tr.id as id, t.name as name, tr.status as status, tr.amount as amount, tr.points as points FROM TaskRecord tr
     LEFT JOIN User0 u ON tr.user_id = u.id
@@ -33,7 +33,7 @@ func getTaskRecord(client *sql.DB, address string) []*trading.TaskRecord {
     WHERE u.address = $1
     Limit 100
     `
-    rows, err := client.Query(query, address)
+    rows, err := repository.client.Query(query, address)
     if err != nil {
         log.Fatal(err)
     }
@@ -41,15 +41,15 @@ func getTaskRecord(client *sql.DB, address string) []*trading.TaskRecord {
 
     var taskRecords []*trading.TaskRecord
     for rows.Next() {
-        taskRecord := &TaskRecordEntity{}
-        task := &TaskEntity{}
+        taskRecordEntity := &TaskRecordEntity{}
+        taskEntity := &TaskEntity{}
 
         err := rows.Scan(
-            &taskRecord.Id, &task.Name, &taskRecord.Status, &taskRecord.Amount, &taskRecord.Points)
+            &taskRecordEntity.Id, &taskEntity.Name, &taskRecordEntity.Status, &taskRecordEntity.Amount, &taskRecordEntity.Points)
         if err != nil {
             log.Fatal(err)
         }
-        taskRecords = append(taskRecords, ToTaskRecord(taskRecord, task))
+        taskRecords = append(taskRecords, ToTaskRecord(taskRecordEntity, user, ToTask(taskEntity)))
     }
 
     return taskRecords
@@ -81,49 +81,6 @@ func getUser(client *sql.DB, address string) *trading.User {
     return ToUser(userEntity)
 }
 
-func (repository *UserRepository) FindUserRewardByAddress(address string) *trading.User {
-    user := getUser(repository.client, address)
-    if user == nil {
-        return nil
-    }
-
-    rewardRecord := getRewardRecord(repository.client, address)
-    user.PointHistory = rewardRecord
-    return user
-
-    return user
-}
-
-func getRewardRecord(client *sql.DB, address string) []*trading.RewardRecord {
-    query := `
-    SELECT rr.id as id, t.name as name, rr.points as points, rr.created_at as CreatedAt FROM RewardRecord rr
-    LEFT JOIN User0 u ON rr.user_id = u.id
-    LEFT JOIN Task t ON rr.task_id = t.id
-    WHERE u.address = $1
-    Limit 100
-    `
-    rows, err := client.Query(query, address)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer rows.Close()
-
-    var rewardRecords []*trading.RewardRecord
-
-    for rows.Next() {
-        rewardRecord := &RewardRecordEntity{}
-        task := &TaskEntity{}
-
-        err := rows.Scan(
-            &rewardRecord.Id, &task.Name, &rewardRecord.Points, &rewardRecord.CreatedAt)
-        if err != nil {
-            log.Fatal(err)
-        }
-        rewardRecords = append(rewardRecords, ToRewardRecord(rewardRecord, task))
-    }
-    return rewardRecords
-}
-
 func (repository *UserRepository) FindAllUserTasks() []*trading.User {
     query := `
     SELECT u.id as uid, u.address as address, u.amount as amount, u.points as points, t.name as name, tr.id as trid, tr.status as task_status, tr.amount as task_amount, tr.points as task_points FROM TaskRecord tr
@@ -153,7 +110,7 @@ func (repository *UserRepository) FindAllUserTasks() []*trading.User {
         if !exists {
             usersMap[userEntity.Address] = ToUser(userEntity)
         }
-        usersMap[userEntity.Address].AddTask(ToTaskRecord(taskRecordEntity, taskEntity))
+        usersMap[userEntity.Address].AcceptTask(ToTaskRecord(taskRecordEntity, usersMap[userEntity.Address], ToTask(taskEntity)))
     }
 
     var users []*trading.User
@@ -193,7 +150,6 @@ func (repository *UserRepository) SaveAllUser(users []*trading.User) {
 
     mergeUser(tx, users)
     mergeTaskRecord(tx, users, tasksMap)
-    insertRewardRecord(tx, users, tasksMap)
 
     err = tx.Commit()
     if err != nil {
@@ -254,37 +210,9 @@ func mergeTaskRecord(tx *sql.Tx, users []*trading.User, tasksMap map[string]*Tas
     defer stmt.Close()
 
     for _, user := range users {
-        for _, task := range user.Tasks {
-            entity := ToTaskRecordEntity(user, task, tasksMap)
+        for _, taskRecord := range user.GetTaskRecords() {
+            entity := ToTaskRecordEntity(taskRecord, user, tasksMap)
             _, err = stmt.Exec(entity.Id, entity.UserId, entity.TaskId, entity.Status, entity.Amount, entity.Points, entity.CreatedAt, entity.UpdatedAt)
-            if err != nil {
-                newErr := tx.Rollback()
-                if newErr != nil {
-                    log.Fatal(err)
-                }
-            }
-        }
-    }
-}
-
-func insertRewardRecord(tx *sql.Tx, users []*trading.User, tasksMap map[string]*TaskEntity) {
-    query := `
-    INSERT INTO rewardrecord (id, user_id, task_id, points, created_at)
-    VALUES ($1, $2, $3, $4, $5)
-    `
-    stmt, err := tx.Prepare(query)
-    if err != nil {
-        newErr := tx.Rollback()
-        if newErr != nil {
-            log.Fatal(err)
-        }
-    }
-    defer stmt.Close()
-
-    for _, user := range users {
-        for _, reward := range user.PointHistory {
-            entity := ToRewardRecordEntity(user, reward, tasksMap)
-            _, err = stmt.Exec(entity.Id, entity.UserId, entity.TaskId, entity.Points, entity.CreatedAt)
             if err != nil {
                 newErr := tx.Rollback()
                 if newErr != nil {

@@ -4,90 +4,75 @@ import (
     "github.com/google/uuid"
     "math/big"
     "strings"
-    "time"
 )
 
 type User struct {
-    Id           uuid.UUID
-    Address      string
-    TotalAmount  *big.Int
-    TotalPoints  int
-    Tasks        []*TaskRecord
-    PointHistory []*RewardRecord
+    Id          uuid.UUID
+    Address     string
+    TotalAmount *big.Int
+    TotalPoints int
+    taskRecords []*TaskRecord
 }
 
 func NewUser(adrress string) *User {
     tasks := make([]*TaskRecord, 0)
-    tasks = append(tasks, NewOnBoardingTaskRecord(new(big.Int).SetInt64(0), 0))
-    return &User{Id: uuid.New(), Address: adrress, TotalAmount: &big.Int{}, TotalPoints: 0, Tasks: tasks}
+    user := &User{Id: uuid.New(), Address: adrress, TotalAmount: &big.Int{}, TotalPoints: 0, taskRecords: tasks}
+    user.taskRecords = append(tasks, NewTaskRecord(user, NewOnBoardingTask(), new(big.Int).SetInt64(0), 0))
+    return user
 }
 
-func (user *User) GetTask(name string, status TaskStatus) *TaskRecord {
-    for _, task := range user.Tasks {
-        if task.Name == name && task.Status == status {
-            return task
+func (user *User) CountTaskRecord() int {
+    return len(user.taskRecords)
+}
+
+func (user *User) GetTaskRecords() []*TaskRecord {
+    return user.taskRecords
+}
+
+func (user *User) SetTaskRecords(taskRecords []*TaskRecord){
+    user.taskRecords = taskRecords
+}
+
+func (user *User) GetTaskRecord(name string, status TaskStatus) *TaskRecord {
+    for _, taskRecord := range user.taskRecords {
+        if task, ok := taskRecord.Task.(Task); ok {
+            if task.GetName() == name && taskRecord.Status == status {
+                return taskRecord
+            }
         }
     }
     return nil
 }
 
-func (user *User) GetTaskById(id uuid.UUID) *TaskRecord {
-    for _, task := range user.Tasks {
-        if task.Id == id {
-            return task
+func (user *User) GetTaskRecordByStatus(status TaskStatus) *TaskRecord {
+    for _, taskRecord := range user.taskRecords {
+        if taskRecord.Status == status {
+            return taskRecord
         }
     }
     return nil
 }
 
-func (user *User) GetTaskByName(name string) []*TaskRecord {
-    var tasks []*TaskRecord
-    for _, task := range user.Tasks {
-        if strings.ToLower(task.Name) == strings.ToLower(name) {
-            tasks = append(tasks, task)
+func (user *User) GetTaskRecordByName(name string) []*TaskRecord {
+    var taskRecords []*TaskRecord
+    for _, taskRecord := range user.taskRecords {
+        if task, ok := taskRecord.Task.(Task); ok {
+            if strings.ToLower(task.GetName()) == strings.ToLower(name) {
+                taskRecords = append(taskRecords, taskRecord)
+            }
         }
     }
-    return tasks
+    return taskRecords
 }
 
-func (user *User) AddPoints(taskName string, point int) {
+func (user *User) AddPoints(point int) {
     user.TotalPoints += point
-    task := user.GetTask(taskName, OnGoing)
-    if task == nil {
-        return
-    }
-    task.AddPoints(point)
 }
 
-func (user *User) AddAmount(taskName string, amount *big.Int) {
+func (user *User) AddAmount(amount *big.Int) {
     user.TotalAmount = new(big.Int).Add(user.TotalAmount, amount)
-    task := user.GetTask(taskName, OnGoing)
-    if task == nil {
-        return
-    }
-    task.AddAmount(amount)
 }
 
-func (user *User) AddRewardRecord(taskName string, point int) {
-    user.PointHistory = append(user.PointHistory, &RewardRecord{uuid.New(), taskName, point, time.Now()})
-}
-
-func (user *User) AddTask(taskRecord *TaskRecord) {
-    user.Tasks = append(user.Tasks, taskRecord)
-}
-
-func (user *User) NextTask(previousTaskId uuid.UUID, newTask string) {
-    task := user.GetTaskById(previousTaskId)
-    if task == nil {
-        return
-    }
-    user.Tasks = append(user.Tasks, &TaskRecord{uuid.New(), newTask, OnGoing, task.Amount, 0})
-}
-
-func (user *User) CompleteTask(taskName string) {
-    task := user.GetTask(taskName, OnGoing)
-    if task == nil {
-        return
-    }
-    task.Status = Completed
+func (user *User) AcceptTask(taskRecord *TaskRecord) {
+    user.taskRecords = append(user.taskRecords, taskRecord)
 }

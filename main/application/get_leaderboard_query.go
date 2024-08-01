@@ -22,6 +22,6 @@ func (query *GetLeaderboardQuery) Execute(taskName string) *events.UsersEvent {
 
 func filterTaskName(users []*trading.User, taskName string) {
     for _, user := range users {
-        user.Tasks = user.GetTaskByName(taskName)
+        user.SetTaskRecords(user.GetTaskRecordByName(taskName))
     }
 }

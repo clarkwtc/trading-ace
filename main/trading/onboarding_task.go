@@ -14,7 +14,7 @@ const requiredSwapAmount = 1000
 
 func NewOnBoardingTask() *OnBoardingTask {
     task := &OnBoardingTask{}
-    task.BaseTask = BaseTask{OnBoardingTaskName, 100, task}
+    task.BaseTask = BaseTask{Name: OnBoardingTaskName, RewardPoint: 100, Task: task}
     return task
 }
 
@@ -22,22 +22,25 @@ func (task *OnBoardingTask) getRewardPoint() int {
     return task.RewardPoint
 }
 
-func (task *OnBoardingTask) Complete(user *User, amount *big.Int) {
-    if task.IsTargetTask(user) && task.isRequiredAmount(user, amount) {
-        task.reward(user)
-        taskRecord := user.GetTask(task.Name, OnGoing)
-        user.CompleteTask(task.Name)
-        user.NextTask(taskRecord.Id, SharePoolTaskName)
+func (task *OnBoardingTask) Complete(amount *big.Int) {
+    if task.IsTargetTask() && task.isRequiredAmount(amount) {
+        task.reward()
+        task.TaskRecord.Completed()
+        task.nextTask()
     }
 }
 
-func (task *OnBoardingTask) isRequiredAmount(user *User, amount *big.Int) bool {
-    sumAmount := new(big.Int).Add(user.TotalAmount, amount)
+func (task *OnBoardingTask) isRequiredAmount(amount *big.Int) bool {
+    sumAmount := new(big.Int).Add(task.GetUser().TotalAmount, amount)
     requiredAmount := new(big.Int).SetInt64(requiredSwapAmount)
     return sumAmount.Cmp(utils.ToUSDC(requiredAmount)) >= 0
 }
 
-func (task *OnBoardingTask) reward(user *User) {
-    user.AddPoints(task.Name, task.getRewardPoint())
-    user.AddRewardRecord(task.Name, task.getRewardPoint())
+func (task *OnBoardingTask) reward() {
+    task.TaskRecord.SetEarnPoints(task.getRewardPoint())
+}
+
+func (task *OnBoardingTask) nextTask() {
+    user := task.GetUser()
+    user.AcceptTask(NewTaskRecord(user, NewSharePoolTask(), task.TaskRecord.SwapAmount, 0))
 }

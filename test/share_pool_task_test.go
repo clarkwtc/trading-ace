@@ -15,52 +15,55 @@ func TestNewSharePoolTask(t *testing.T) {
     task := trading.NewSharePoolTask()
 
     // Then
-    assert.Equal(t, trading.SharePoolTaskName, task.Name)
+    assert.Equal(t, "SharePoolTask", task.Name)
     assert.Equal(t, 10000, task.RewardPoint)
 }
 
 func TestCompleteOnNotCompletedPredecessorTasks(t *testing.T) {
     // Given
     user := trading.NewUser(uuid.New().String())
-    amount := utils.ToUSDC(new(big.Int).SetInt64(100))
-    onBoardingTask := trading.NewOnBoardingTask()
-    onBoardingTask.Complete(user, amount)
-
-    task := trading.NewSharePoolTask()
+    sharePoolTaskRecord := trading.NewTaskRecord(user, trading.NewSharePoolTask(), new(big.Int).SetInt64(0), 0)
+    user.AcceptTask(sharePoolTaskRecord)
+    sharePoolTask := user.GetTaskRecords()[1].Task.(*trading.SharePoolTask)
+    newAmount := utils.ToUSDC(new(big.Int).SetInt64(1000))
 
     // When
-    task.Complete(user, amount, false)
+    sharePoolTask.Complete(newAmount, false)
 
     // Then
-    assert.Equal(t, 1, len(user.Tasks))
-    assert.Equal(t, trading.OnBoardingTaskName, user.Tasks[0].Name)
-    assert.Equal(t, trading.OnGoing, user.Tasks[0].Status)
-    assert.Equal(t, 0, user.Tasks[0].Points)
+    taskRecord := sharePoolTask.TaskRecord
+    assert.Equal(t, trading.SharePoolTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.OnGoing, taskRecord.Status)
+    assert.Equal(t, new(big.Int).SetInt64(0), taskRecord.SwapAmount)
+    assert.Equal(t, 0, taskRecord.EarnPoints)
 }
 
 func TestCompleteSharePoolTask(t *testing.T) {
     // Given
     user := trading.NewUser(uuid.New().String())
+    onBoardingTask := user.GetTaskRecords()[0].Task.(*trading.OnBoardingTask)
     amount := utils.ToUSDC(new(big.Int).SetInt64(1000))
-    onBoardingTask := trading.NewOnBoardingTask()
-    onBoardingTask.Complete(user, amount)
+    onBoardingTask.Complete(amount)
 
-    task := trading.NewSharePoolTask()
+    sharePoolTaskRecord1 := user.GetTaskRecords()[1]
+    sharePoolTask1 := sharePoolTaskRecord1.Task.(*trading.SharePoolTask)
 
     // When
-    task.Complete(user, amount, false)
+    sharePoolTask1.Complete(amount, false)
 
     // Then
-    assert.Equal(t, 3, len(user.Tasks))
-    assert.Equal(t, trading.OnBoardingTaskName, user.Tasks[0].Name)
-    assert.Equal(t, trading.Completed, user.Tasks[0].Status)
-    assert.Equal(t, 100, user.Tasks[0].Points)
+    assert.Equal(t, 3, user.CountTaskRecord())
+    assert.Equal(t, new(big.Int).SetInt64(0), user.TotalAmount)
+    assert.Equal(t, 100, user.TotalPoints)
 
-    assert.Equal(t, trading.SharePoolTaskName, user.Tasks[1].Name)
-    assert.Equal(t, trading.Completed, user.Tasks[1].Status)
-    assert.Equal(t, 0, user.Tasks[1].Points)
+    assert.Equal(t, trading.SharePoolTaskName, sharePoolTaskRecord1.Task.GetName())
+    assert.Equal(t, trading.Completed, sharePoolTaskRecord1.Status)
+    assert.Equal(t, new(big.Int).SetInt64(0), sharePoolTaskRecord1.SwapAmount)
+    assert.Equal(t, 0, sharePoolTaskRecord1.EarnPoints)
 
-    assert.Equal(t, trading.SharePoolTaskName, user.Tasks[2].Name)
-    assert.Equal(t, trading.OnGoing, user.Tasks[2].Status)
-    assert.Equal(t, 0, user.Tasks[2].Points)
+    sharePoolTaskRecord2 := user.GetTaskRecords()[2]
+    assert.Equal(t, trading.SharePoolTaskName, sharePoolTaskRecord2.Task.GetName())
+    assert.Equal(t, trading.OnGoing, sharePoolTaskRecord2.Status)
+    assert.Equal(t, new(big.Int).SetInt64(0), sharePoolTaskRecord2.SwapAmount)
+    assert.Equal(t, 0, sharePoolTaskRecord2.EarnPoints)
 }

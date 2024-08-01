@@ -18,10 +18,10 @@ func ToTaskStatusViewModel(event *events.UserEvent) []*TaskStatusViewModel {
     if user == nil {
         return result
     }
-    for _, task := range user.Tasks {
+    for _, taskRecord := range user.GetTaskRecords() {
         item := &TaskStatusViewModel{
-            Name: task.Name, Status: trading.ParseTaskStatusName(task.Status),
-            Amount: int(task.Amount.Int64()), Points: task.Points}
+            Name: taskRecord.Task.GetName(), Status: trading.ParseTaskStatusName(taskRecord.Status),
+            Amount: int(taskRecord.SwapAmount.Int64()), Points: taskRecord.EarnPoints}
 
         result = append(result, item)
     }
