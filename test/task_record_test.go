@@ -50,60 +50,66 @@ func TestParseTaskStatus(t *testing.T) {
     }
 }
 
-func TestNewOnBoardingTaskRecord(t *testing.T) {
+func TestNewTaskRecord(t *testing.T) {
     // Given
+    user := trading.NewUser(uuid.New().String())
+    task := trading.NewOnBoardingTask()
     amount := new(big.Int).SetInt64(10)
     points := 1
 
     // When
-    taskRecord := trading.NewOnBoardingTaskRecord(amount, points)
+    taskRecord := trading.NewTaskRecord(user, task, amount, points)
 
     // Then
     assert.Equal(t, true, taskRecord.Id != uuid.Nil)
-    assert.Equal(t, trading.OnBoardingTaskName, taskRecord.Name)
+    assert.Equal(t, trading.OnBoardingTaskName, taskRecord.Task.GetName())
     assert.Equal(t, trading.OnGoing, taskRecord.Status)
-    assert.Equal(t, amount, taskRecord.Amount)
-    assert.Equal(t, points, taskRecord.Points)
+    assert.Equal(t, amount, taskRecord.SwapAmount)
+    assert.Equal(t, points, taskRecord.EarnPoints)
 }
 
-func TestNewSharePoolTaskRecord(t *testing.T) {
+func TestSetEarnPoints(t *testing.T) {
     // Given
-    amount := new(big.Int).SetInt64(10)
-    points := 1
+    amount := new(big.Int).SetInt64(0)
+    user := trading.NewUser(uuid.New().String())
+    task := trading.NewOnBoardingTask()
+    taskRecord := trading.NewTaskRecord(user, task, amount, 0)
+    points := 100
 
     // When
-    taskRecord := trading.NewSharePoolTaskRecord(amount, points)
+    taskRecord.SetEarnPoints(points)
 
     // Then
-    assert.Equal(t, true, taskRecord.Id != uuid.Nil)
-    assert.Equal(t, trading.SharePoolTaskName, taskRecord.Name)
-    assert.Equal(t, trading.OnGoing, taskRecord.Status)
-    assert.Equal(t, amount, taskRecord.Amount)
-    assert.Equal(t, points, taskRecord.Points)
+    assert.Equal(t, points, taskRecord.EarnPoints)
 }
 
-func TestTaskRecordAddAmount(t *testing.T) {
+func TestAddSwapAmount(t *testing.T) {
     // Given
     amount := new(big.Int).SetInt64(10)
     points := 1
-    taskRecord := trading.NewOnBoardingTaskRecord(amount, points)
+    user := trading.NewUser(uuid.New().String())
+    task := trading.NewOnBoardingTask()
+    taskRecord := trading.NewTaskRecord(user, task, amount, points)
     addAmount := new(big.Int).SetInt64(10)
+
     // When
-    taskRecord.AddAmount(addAmount)
+    taskRecord.AddSwapAmount(addAmount)
 
     // Then
-    assert.Equal(t, amount.Add(amount, addAmount), taskRecord.Amount)
+    assert.Equal(t, amount.Add(amount, addAmount), taskRecord.SwapAmount)
 }
 
-func TestTaskRecordAddPoints(t *testing.T) {
+func TestCompleted(t *testing.T) {
     // Given
     amount := new(big.Int).SetInt64(10)
     points := 1
-    taskRecord := trading.NewOnBoardingTaskRecord(amount, points)
-    addPoint := 10
+    user := trading.NewUser(uuid.New().String())
+    task := trading.NewOnBoardingTask()
+    taskRecord := trading.NewTaskRecord(user, task, amount, points)
+
     // When
-    taskRecord.AddPoints(addPoint)
+    taskRecord.Completed()
 
     // Then
-    assert.Equal(t, points+addPoint, taskRecord.Points)
+    assert.Equal(t, trading.Completed, taskRecord.Status)
 }

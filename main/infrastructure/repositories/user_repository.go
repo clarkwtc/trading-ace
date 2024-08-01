@@ -16,10 +16,6 @@ func (repository *UserRepository) FindUserTasksByAddress(address string) *tradin
     return repository.access.FindUserTasksByAddress(address)
 }
 
-func (repository *UserRepository) FindUserRewardByAddress(address string) *trading.User {
-    return repository.access.FindUserRewardByAddress(address)
-}
-
 func (repository *UserRepository) FindAllUserTasks() []*trading.User{
     return repository.access.FindAllUserTasks()
 }

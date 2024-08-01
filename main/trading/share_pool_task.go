@@ -12,7 +12,7 @@ const SharePoolTaskName = "SharePoolTask"
 
 func NewSharePoolTask() *SharePoolTask {
     task := &SharePoolTask{}
-    task.BaseTask = BaseTask{SharePoolTaskName, 10000, task}
+    task.BaseTask = BaseTask{Name: SharePoolTaskName, RewardPoint: 10000, Task: task}
     return task
 }
 
@@ -26,28 +26,26 @@ func (task *SharePoolTask) getRewardPoint(addedAmount *big.Int, allUserAmount *b
     return int(result)
 }
 
-func (task *SharePoolTask) Complete(user *User, allUserAmount *big.Int, final bool) {
-    if task.IsTargetTask(user) && task.isCompletedPredecessorTasks(user) {
-        task.reward(user, allUserAmount)
-        taskRecord := user.GetTask(task.Name, OnGoing)
-        user.CompleteTask(task.Name)
+func (task *SharePoolTask) Complete(allUserAmount *big.Int, final bool) {
+    if task.IsTargetTask() && task.isCompletedPredecessorTasks() {
+        task.reward(allUserAmount)
+        task.TaskRecord.Completed()
         if !final {
-            user.NextTask(taskRecord.Id, SharePoolTaskName)
+            task.nextTask()
         }
     }
 }
 
-func (task *SharePoolTask) isCompletedPredecessorTasks(user *User) bool {
-    for _, taskRecord := range user.Tasks {
-        if taskRecord.Name == OnBoardingTaskName && taskRecord.Status == Completed {
-            return true
-        }
-    }
-    return false
+func (task *SharePoolTask) isCompletedPredecessorTasks() bool {
+    return task.GetUser().GetTaskRecord(OnBoardingTaskName, Completed) != nil
 }
 
-func (task *SharePoolTask) reward(user *User, allUserAmount *big.Int) {
-    rewardPoint := task.getRewardPoint(user.TotalAmount, allUserAmount)
-    user.AddPoints(task.Name, rewardPoint)
-    user.AddRewardRecord(task.Name, rewardPoint)
+func (task *SharePoolTask) reward(allUserAmount *big.Int) {
+    rewardPoint := task.getRewardPoint(task.GetUser().TotalAmount, allUserAmount)
+    task.TaskRecord.SetEarnPoints(rewardPoint)
+}
+
+func (task *SharePoolTask) nextTask() {
+    user := task.GetUser()
+    user.AcceptTask(NewTaskRecord(user, NewSharePoolTask(), new(big.Int).SetInt64(0), 0))
 }

@@ -18,12 +18,14 @@ type TaskRecordEntity struct {
     UpdatedAt time.Time
 }
 
-func ToTaskRecord(taskRecordEntity *TaskRecordEntity, taskEntity *TaskEntity) *trading.TaskRecord {
+func ToTaskRecord(taskRecordEntity *TaskRecordEntity, user *trading.User, task trading.Task) *trading.TaskRecord {
     amount, _ := new(big.Int).SetString(taskRecordEntity.Amount, 10)
-    return &trading.TaskRecord{Id: uuid.MustParse(taskRecordEntity.Id), Name: taskEntity.Name, Status: trading.ParseTaskStatus(taskRecordEntity.Status), Amount: amount, Points: taskRecordEntity.Points}
+    taskRecord := &trading.TaskRecord{Id: uuid.MustParse(taskRecordEntity.Id), User: user, Task: task, Status: trading.ParseTaskStatus(taskRecordEntity.Status), SwapAmount: amount, EarnPoints: taskRecordEntity.Points, CompletedTime: taskRecordEntity.UpdatedAt}
+    task.SetTaskRecord(taskRecord)
+    return taskRecord
 }
 
-func ToTaskRecordEntity(user *trading.User, task *trading.TaskRecord, tasksMap map[string]*TaskEntity) *TaskRecordEntity {
+func ToTaskRecordEntity(taskRecord *trading.TaskRecord, user *trading.User, tasksMap map[string]*TaskEntity) *TaskRecordEntity {
     now := time.Now()
-    return &TaskRecordEntity{task.Id.String(), user.Id.String(), tasksMap[task.Name].Id, trading.ParseTaskStatusName(task.Status), task.Amount.String(), task.Points, now, now}
+    return &TaskRecordEntity{taskRecord.Id.String(), user.Id.String(), tasksMap[taskRecord.Task.GetName()].Id, trading.ParseTaskStatusName(taskRecord.Status), taskRecord.SwapAmount.String(), taskRecord.EarnPoints, now, now}
 }

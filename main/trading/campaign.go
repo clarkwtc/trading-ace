@@ -41,17 +41,15 @@ func ParseCampaignMode(modeName string) CampaignMode {
 
 type Campaign struct {
     Mode           CampaignMode
-    OnBoardingTask *OnBoardingTask
-    SharePoolTask  *SharePoolTask
     Users          []*User
 }
 
 func NewCampaign() *Campaign {
     campaignMode := ParseCampaignMode(viper.GetString("campaign_mode"))
-    return &Campaign{Mode: campaignMode, OnBoardingTask: NewOnBoardingTask(), SharePoolTask: NewSharePoolTask()}
+    return &Campaign{Mode: campaignMode}
 }
 
-func (campaign *Campaign) AddUsers(user *User) {
+func (campaign *Campaign) addUsers(user *User) {
     if user == nil {
         return
     }
@@ -61,26 +59,18 @@ func (campaign *Campaign) AddUsers(user *User) {
 func (campaign *Campaign) Swap(address string, amount *big.Int) {
     user := campaign.GetUserByAddress(address)
     if user == nil {
-        return
+        user = NewUser(address)
     }
 
-    user.AddAmount(campaign.OnBoardingTask.Name, amount)
-    campaign.OnBoardingTask.Complete(user, amount)
-}
+    campaign.addUsers(user)
+    user.AddAmount(amount)
+    taskRecord := user.GetTaskRecordByStatus(OnGoing)
+    taskRecord.AddSwapAmount(amount)
 
-func (campaign *Campaign) Settlement(final bool) {
-    totalAmount := campaign.sumAllUserAmount()
-    for _, user := range campaign.Users {
-        campaign.SharePoolTask.Complete(user, totalAmount, final)
+    switch task := taskRecord.Task.(type) {
+    case *OnBoardingTask:
+        task.Complete(amount)
     }
-}
-
-func (campaign *Campaign) sumAllUserAmount() *big.Int {
-    sum := new(big.Int).SetInt64(0)
-    for _, user := range campaign.Users {
-        sum.Add(sum, user.TotalAmount)
-    }
-    return sum
 }
 
 func (campaign *Campaign) GetUserByAddress(address string) *User {
@@ -90,4 +80,25 @@ func (campaign *Campaign) GetUserByAddress(address string) *User {
         }
     }
     return nil
+}
+
+func (campaign *Campaign) Settlement(final bool) {
+    totalAmount := campaign.sumAllUserAmount()
+
+    for _, user := range campaign.Users {
+        taskRecord := user.GetTaskRecordByStatus(OnGoing)
+
+        switch task := taskRecord.Task.(type) {
+        case *SharePoolTask:
+            task.Complete(totalAmount, final)
+        }
+    }
+}
+
+func (campaign *Campaign) sumAllUserAmount() *big.Int {
+    sum := new(big.Int).SetInt64(0)
+    for _, user := range campaign.Users {
+        sum.Add(sum, user.TotalAmount)
+    }
+    return sum
 }
