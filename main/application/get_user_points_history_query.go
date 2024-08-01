@@ -10,7 +10,7 @@ type GetUserPointsHistoryQuery struct {
 }
 
 func (query *GetUserPointsHistoryQuery) Execute(address string) *events.UserEvent {
-    user := query.UserRepository.FindUserRewardByAddress(address)
+    user := query.UserRepository.FindUserTasksByAddress(address)
     if user == nil {
         return &events.UserEvent{}
     }

@@ -17,8 +17,8 @@ func ToPointsHistoryViewModel(event *events.UserEvent) []*PointsHistoryViewModel
     if user == nil {
         return result
     }
-    for _, reward := range user.PointHistory {
-        item := &PointsHistoryViewModel{reward.TaskName, reward.Points, reward.RewardTime}
+    for _, taskRecord := range user.GetTaskRecords() {
+        item := &PointsHistoryViewModel{taskRecord.Task.GetName(), taskRecord.EarnPoints, taskRecord.CompletedTime}
 
         result = append(result, item)
     }

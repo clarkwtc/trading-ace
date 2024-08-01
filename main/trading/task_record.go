@@ -5,6 +5,7 @@ import (
     "log"
     "math/big"
     "strings"
+    "time"
 )
 
 type TaskStatus int
@@ -40,25 +41,30 @@ func ParseTaskStatus(modeName string) TaskStatus {
 }
 
 type TaskRecord struct {
-    Id     uuid.UUID
-    Name   string
-    Status TaskStatus
-    Amount *big.Int
-    Points int
+    Id            uuid.UUID
+    User          *User
+    Task          Task
+    Status        TaskStatus
+    SwapAmount    *big.Int
+    EarnPoints    int
+    CompletedTime time.Time
 }
 
-func NewOnBoardingTaskRecord(amount *big.Int, points int) *TaskRecord {
-    return &TaskRecord{uuid.New(), OnBoardingTaskName, OnGoing, amount, points}
+func NewTaskRecord(user *User, task Task, amount *big.Int, points int) *TaskRecord {
+    taskRecord := &TaskRecord{Id: uuid.New(), User: user, Task: task, Status: OnGoing, SwapAmount: amount, EarnPoints: points}
+    task.SetTaskRecord(taskRecord)
+    return taskRecord
 }
 
-func NewSharePoolTaskRecord(amount *big.Int, points int) *TaskRecord {
-    return &TaskRecord{uuid.New(), SharePoolTaskName, OnGoing, amount, points}
+func (taskRecord *TaskRecord) SetEarnPoints(point int) {
+    taskRecord.EarnPoints = point
+    taskRecord.User.AddPoints(point)
 }
 
-func (taskRecord *TaskRecord) AddPoints(point int) {
-    taskRecord.Points += point
+func (taskRecord *TaskRecord) AddSwapAmount(amount *big.Int) {
+    taskRecord.SwapAmount.Add(taskRecord.SwapAmount, amount)
 }
 
-func (taskRecord *TaskRecord) AddAmount(amount *big.Int) {
-    taskRecord.Amount = new(big.Int).Add(taskRecord.Amount, amount)
+func (taskRecord *TaskRecord) Completed() {
+    taskRecord.Status = Completed
 }

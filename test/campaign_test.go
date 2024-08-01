@@ -67,123 +67,100 @@ func TestNewCampaignOnPastBacktestMode(t *testing.T) {
 
         // Then
         assert.Equal(t, task.campaignMode, campaign.Mode)
-        assert.Equal(t, trading.OnBoardingTaskName, campaign.OnBoardingTask.Name)
-        assert.Equal(t, trading.SharePoolTaskName, campaign.SharePoolTask.Name)
         assert.Equal(t, 0, len(campaign.Users))
     }
-}
-
-func TestAddUsers(t *testing.T) {
-    // Given
-    viper.Set("campaign_mode", trading.ParseCampaignModeName(trading.PastBacktestMode))
-    campaign := trading.NewCampaign()
-    user := trading.NewUser(uuid.New().String())
-
-    // When
-    campaign.AddUsers(user)
-
-    // Then
-    assert.Equal(t, 1, len(campaign.Users))
-    assert.Equal(t, user, campaign.Users[0])
 }
 
 func TestSwapOnNotCompletedTask(t *testing.T) {
     // Given
     viper.Set("campaign_mode", trading.ParseCampaignModeName(trading.PastBacktestMode))
     campaign := trading.NewCampaign()
-    user := trading.NewUser(uuid.New().String())
-    campaign.AddUsers(user)
+    address := uuid.New().String()
     amount := utils.ToUSDC(new(big.Int).SetInt64(100))
 
     // When
-    campaign.Swap(user.Address, amount)
+    campaign.Swap(address, amount)
 
     // Then
+    user := campaign.GetUserByAddress(address)
     assert.Equal(t, amount, user.TotalAmount)
     assert.Equal(t, 0, user.TotalPoints)
-    assert.Equal(t, 1, len(user.Tasks))
-    assert.Equal(t, trading.OnBoardingTaskName, user.Tasks[0].Name)
-    assert.Equal(t, trading.OnGoing, user.Tasks[0].Status)
-    assert.Equal(t, amount, user.Tasks[0].Amount)
-    assert.Equal(t, 0, user.Tasks[0].Points)
+    assert.Equal(t, 1, user.CountTaskRecord())
+
+    taskRecord := user.GetTaskRecords()[0]
+    assert.Equal(t, trading.OnBoardingTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.OnGoing, taskRecord.Status)
+    assert.Equal(t, amount, taskRecord.SwapAmount)
+    assert.Equal(t, 0, taskRecord.EarnPoints)
 }
 
 func TestSwapOnCompletedTask(t *testing.T) {
     // Given
     viper.Set("campaign_mode", trading.ParseCampaignModeName(trading.PastBacktestMode))
     campaign := trading.NewCampaign()
-    user := trading.NewUser(uuid.New().String())
-    campaign.AddUsers(user)
+    address := uuid.New().String()
     amount := utils.ToUSDC(new(big.Int).SetInt64(1001))
 
     // When
-    campaign.Swap(user.Address, amount)
+    campaign.Swap(address, amount)
 
     // Then
+    user := campaign.GetUserByAddress(address)
     assert.Equal(t, amount, user.TotalAmount)
     assert.Equal(t, 100, user.TotalPoints)
+    assert.Equal(t, 2, user.CountTaskRecord())
 
-    assert.Equal(t, 2, len(user.Tasks))
-    assert.Equal(t, trading.OnBoardingTaskName, user.Tasks[0].Name)
-    assert.Equal(t, trading.Completed, user.Tasks[0].Status)
-    assert.Equal(t, amount, user.Tasks[0].Amount)
-    assert.Equal(t, 100, user.Tasks[0].Points)
+    taskRecord := user.GetTaskRecords()[0]
+    assert.Equal(t, trading.OnBoardingTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.Completed, taskRecord.Status)
+    assert.Equal(t, amount, taskRecord.SwapAmount)
+    assert.Equal(t, 100, taskRecord.EarnPoints)
 
-    assert.Equal(t, trading.SharePoolTaskName, user.Tasks[1].Name)
-    assert.Equal(t, trading.OnGoing, user.Tasks[1].Status)
-    assert.Equal(t, amount, user.Tasks[1].Amount)
-    assert.Equal(t, 0, user.Tasks[1].Points)
+    taskRecord = user.GetTaskRecords()[1]
+    assert.Equal(t, trading.SharePoolTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.OnGoing, taskRecord.Status)
+    assert.Equal(t, amount, taskRecord.SwapAmount)
+    assert.Equal(t, 0, taskRecord.EarnPoints)
 }
 
 func TestSettlement(t *testing.T) {
     // Given
     viper.Set("campaign_mode", trading.ParseCampaignModeName(trading.PastBacktestMode))
     campaign := trading.NewCampaign()
-    user := trading.NewUser(uuid.New().String())
-    campaign.AddUsers(user)
+    address := uuid.New().String()
     amount := utils.ToUSDC(new(big.Int).SetInt64(2000))
-    campaign.Swap(user.Address, amount)
+    campaign.Swap(address, amount)
 
-    user2 := trading.NewUser(uuid.New().String())
-    campaign.AddUsers(user2)
+    address2 := uuid.New().String()
     amount2 := utils.ToUSDC(new(big.Int).SetInt64(2000))
-    campaign.Swap(user2.Address, amount2)
+    campaign.Swap(address2, amount2)
 
     // When
     campaign.Settlement(false)
 
     // Then
+    user := campaign.GetUserByAddress(address)
+    user2 := campaign.GetUserByAddress(address2)
+    assert.Equal(t, 3, user.CountTaskRecord())
     assert.Equal(t, amount, user.TotalAmount)
     assert.Equal(t, 5100, user.TotalPoints)
     assert.Equal(t, 5100, user2.TotalPoints)
 
-    assert.Equal(t, 3, len(user.Tasks))
-    assert.Equal(t, trading.OnBoardingTaskName, user.Tasks[0].Name)
-    assert.Equal(t, trading.Completed, user.Tasks[0].Status)
-    assert.Equal(t, amount, user.Tasks[0].Amount)
-    assert.Equal(t, 100, user.Tasks[0].Points)
+    taskRecord := user.GetTaskRecords()[0]
+    assert.Equal(t, trading.OnBoardingTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.Completed, taskRecord.Status)
+    assert.Equal(t, amount, taskRecord.SwapAmount)
+    assert.Equal(t, 100, taskRecord.EarnPoints)
 
-    assert.Equal(t, trading.SharePoolTaskName, user.Tasks[1].Name)
-    assert.Equal(t, trading.Completed, user.Tasks[1].Status)
-    assert.Equal(t, amount, user.Tasks[1].Amount)
-    assert.Equal(t, 5000, user.Tasks[1].Points)
+    taskRecord = user.GetTaskRecords()[1]
+    assert.Equal(t, trading.SharePoolTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.Completed, taskRecord.Status)
+    assert.Equal(t, amount, taskRecord.SwapAmount)
+    assert.Equal(t, 5000, taskRecord.EarnPoints)
 
-    assert.Equal(t, trading.SharePoolTaskName, user.Tasks[2].Name)
-    assert.Equal(t, trading.OnGoing, user.Tasks[2].Status)
-    assert.Equal(t, amount, user.Tasks[2].Amount)
-    assert.Equal(t, 0, user.Tasks[2].Points)
-}
-
-func TestGetUserByAddress(t *testing.T) {
-    // Given
-    viper.Set("campaign_mode", trading.ParseCampaignModeName(trading.PastBacktestMode))
-    campaign := trading.NewCampaign()
-    newUser := trading.NewUser(uuid.New().String())
-    campaign.AddUsers(newUser)
-
-    // When
-    user := campaign.GetUserByAddress(newUser.Address)
-
-    // Then
-    assert.Equal(t, newUser, user)
+    taskRecord = user.GetTaskRecords()[2]
+    assert.Equal(t, trading.SharePoolTaskName, taskRecord.Task.GetName())
+    assert.Equal(t, trading.OnGoing, taskRecord.Status)
+    assert.Equal(t, new(big.Int).SetInt64(0), taskRecord.SwapAmount)
+    assert.Equal(t, 0, taskRecord.EarnPoints)
 }

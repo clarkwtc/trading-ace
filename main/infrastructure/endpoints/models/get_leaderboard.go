@@ -25,8 +25,8 @@ func ToLeaderboardViewModel(event *events.UsersEvent) []*LeaderboardViewModel {
 
 func sumTaskPoints(user *trading.User) int {
     points := 0
-    for _, task := range user.Tasks {
-        points += task.Points
+    for _, taskRecord := range user.GetTaskRecords() {
+        points += taskRecord.EarnPoints
     }
 
     return points

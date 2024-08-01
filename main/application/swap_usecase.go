@@ -20,7 +20,6 @@ func (usecase *SwapUsecase) Execute(address string, amount *big.Int) {
         user = trading.NewUser(address)
     }
     campaign := trading.NewCampaign()
-    campaign.AddUsers(user)
     campaign.Swap(address, amount)
     usecase.UserRepository.SaveAllUser(campaign.Users)
 
