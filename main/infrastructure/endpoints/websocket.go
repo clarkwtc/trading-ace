@@ -21,7 +21,7 @@ var upgrader = websocket.Upgrader{
     },
 }
 
-func (socket WebsocketConnection) BindConnection(ctx *gin.Context) {
+func (socket *WebsocketConnection) BindConnection(ctx *gin.Context) {
     connection, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
     if err != nil {
         ctx.JSON(http.StatusHTTPVersionNotSupported, gin.H{"error": err.Error()})
@@ -35,7 +35,7 @@ func (socket WebsocketConnection) BindConnection(ctx *gin.Context) {
     socket.handleWriteMessage(client)
 }
 
-func (socket WebsocketConnection) close(client *eventhub.Client) {
+func (socket *WebsocketConnection) close(client *eventhub.Client) {
     socket.EventHub.UnSubscribe(client)
     err := client.Connection.Close()
     if err != nil {
@@ -43,7 +43,7 @@ func (socket WebsocketConnection) close(client *eventhub.Client) {
     }
 }
 
-func (socket WebsocketConnection) handleReadMessage(client *eventhub.Client) {
+func (socket *WebsocketConnection) handleReadMessage(client *eventhub.Client) {
     for {
         _, message, err := client.Connection.ReadMessage()
         if err != nil {
@@ -61,7 +61,7 @@ func (socket WebsocketConnection) handleReadMessage(client *eventhub.Client) {
     }
 }
 
-func (socket WebsocketConnection) handleWriteMessage(client *eventhub.Client) {
+func (socket *WebsocketConnection) handleWriteMessage(client *eventhub.Client) {
     for {
         select {
         case message := <-client.Message:
