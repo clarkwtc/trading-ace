@@ -40,8 +40,8 @@ func ParseCampaignMode(modeName string) CampaignMode {
 }
 
 type Campaign struct {
-    Mode           CampaignMode
-    Users          []*User
+    Mode  CampaignMode
+    Users []*User
 }
 
 func NewCampaign() *Campaign {
@@ -49,7 +49,7 @@ func NewCampaign() *Campaign {
     return &Campaign{Mode: campaignMode}
 }
 
-func (campaign *Campaign) addUsers(user *User) {
+func (campaign *Campaign) AddUsers(user *User) {
     if user == nil {
         return
     }
@@ -62,7 +62,7 @@ func (campaign *Campaign) Swap(address string, amount *big.Int) {
         user = NewUser(address)
     }
 
-    campaign.addUsers(user)
+    campaign.AddUsers(user)
     user.AddAmount(amount)
     taskRecord := user.GetTaskRecordByStatus(OnGoing)
     taskRecord.AddSwapAmount(amount)
