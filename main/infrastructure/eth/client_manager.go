@@ -2,8 +2,8 @@ package eth
 
 import (
     "context"
-    "fmt"
     "github.com/ethereum/go-ethereum/ethclient"
+    "log"
     "tradingACE/main/infrastructure/server"
 )
 
@@ -18,7 +18,7 @@ func NewClientManager() *ClientManager {
     url := server.SystemConfig.Ethereum.URL
     client, err := ethclient.DialContext(ctx, url)
     if err != nil {
-        fmt.Println(err)
+        log.Fatalf("Could not connect eth client: %v", err)
     }
     return &ClientManager{ctx, client, url}
 }
@@ -29,7 +29,7 @@ func (manager *ClientManager) ReconnectEthClient(url string) {
     ctx := context.Background()
     client, err := ethclient.DialContext(ctx, url)
     if err != nil {
-        return
+        log.Fatalf("Could not reconnect eth client: %v", err)
     }
 
     manager.context = ctx

@@ -28,26 +28,33 @@ type UserUri struct {
 
 func (resource *UserResource) GetUserTasksStatus(ctx *gin.Context) {
     var userUri UserUri
-
     err := ctx.ShouldBindUri(&userUri)
     if err != nil {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    event := resource.GetUserTasksStatusQuery.Execute(userUri.Address)
+
+    event, err := resource.GetUserTasksStatusQuery.Execute(userUri.Address)
+    if err != nil {
+        _ = ctx.Error(err)
+        return
+    }
     ctx.JSON(http.StatusOK, models.ToTaskStatusViewModel(event))
 }
 
 func (resource *UserResource) GetUserPointsHistory(ctx *gin.Context) {
     var userUri UserUri
-
     err := ctx.ShouldBindUri(&userUri)
     if err != nil {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    event := resource.GetUserPointsHistoryQuery.Execute(userUri.Address)
+    event, err := resource.GetUserPointsHistoryQuery.Execute(userUri.Address)
+    if err != nil {
+        _ = ctx.Error(err)
+        return
+    }
     ctx.JSON(http.StatusOK, models.ToPointsHistoryViewModel(event))
 }
 
@@ -62,6 +69,7 @@ func (resource *UserResource) GetLeaderboard(ctx *gin.Context) {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
+
     event := resource.GetLeaderboardQuery.Execute(leaderboardQuery.Task)
     ctx.JSON(http.StatusOK, models.ToLeaderboardViewModel(event))
 }

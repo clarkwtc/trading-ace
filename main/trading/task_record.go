@@ -22,7 +22,7 @@ func ParseTaskStatusName(status TaskStatus) string {
     case Completed:
         return "Completed"
     default:
-        log.Fatalf("Not support status %v", status)
+        log.Printf("Not support status %v", status)
     }
     return ""
 }
@@ -35,7 +35,7 @@ func ParseTaskStatus(modeName string) TaskStatus {
     case strings.ToLower("Completed"):
         return Completed
     default:
-        log.Fatalf("Not support status %v", modeName)
+        log.Printf("Not support status %v", modeName)
     }
     return -1
 }

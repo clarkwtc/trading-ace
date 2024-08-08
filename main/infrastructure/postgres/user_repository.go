@@ -14,18 +14,21 @@ func NewUserRepository(client *sql.DB) *UserRepository {
     return &UserRepository{client}
 }
 
-func (repository *UserRepository) FindUserTasksByAddress(address string) *trading.User {
-    user := getUser(repository.client, address)
-    if user == nil {
-        return nil
+func (repository *UserRepository) FindUserTasksByAddress(address string) (*trading.User, error) {
+    user, err := getUser(repository.client, address)
+    if err != nil {
+        return user, err
     }
 
-    taskRecords := repository.getTaskRecord(user, address)
+    taskRecords, err := repository.getTaskRecord(user, address)
+    if err != nil {
+        return user, err
+    }
     user.SetTaskRecords(taskRecords)
-    return user
+    return user, nil
 }
 
-func (repository *UserRepository) getTaskRecord(user *trading.User, address string) []*trading.TaskRecord {
+func (repository *UserRepository) getTaskRecord(user *trading.User, address string) ([]*trading.TaskRecord, error) {
     query := `
     SELECT tr.id as id, t.name as name, tr.status as status, tr.amount as amount, tr.points as points FROM TaskRecord tr
     LEFT JOIN User0 u ON tr.user_id = u.id
@@ -35,7 +38,8 @@ func (repository *UserRepository) getTaskRecord(user *trading.User, address stri
     `
     rows, err := repository.client.Query(query, address)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("Query getTaskRecord fail: %v", err)
+        return nil, err
     }
     defer rows.Close()
 
@@ -44,44 +48,47 @@ func (repository *UserRepository) getTaskRecord(user *trading.User, address stri
         taskRecordEntity := &TaskRecordEntity{}
         taskEntity := &TaskEntity{}
 
-        err := rows.Scan(
+        err = rows.Scan(
             &taskRecordEntity.Id, &taskEntity.Name, &taskRecordEntity.Status, &taskRecordEntity.Amount, &taskRecordEntity.Points)
         if err != nil {
-            log.Fatal(err)
+            log.Printf("Parse getTaskRecord entity fail: %v", err)
+            return nil, err
         }
         taskRecords = append(taskRecords, ToTaskRecord(taskRecordEntity, user, ToTask(taskEntity)))
     }
 
-    return taskRecords
+    return taskRecords, nil
 }
 
-func getUser(client *sql.DB, address string) *trading.User {
+func getUser(client *sql.DB, address string) (*trading.User, error) {
     query := `
     SELECT id, address, amount, points FROM User0
     WHERE address = $1
     `
     rows, err := client.Query(query, address)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("Query getUser fail: %v", err)
+        return nil, err
     }
     defer rows.Close()
     userEntity := &UserEntity{}
 
     for rows.Next() {
-        err := rows.Scan(&userEntity.Id, &userEntity.Address, &userEntity.Amount, &userEntity.Points)
+        err = rows.Scan(&userEntity.Id, &userEntity.Address, &userEntity.Amount, &userEntity.Points)
         if err != nil {
-            log.Fatal(err)
+            log.Printf("Parse getUser entity fail: %v", err)
+            return nil, err
         }
     }
 
     if userEntity.Address == "" {
-        return nil
+        return nil, nil
     }
 
-    return ToUser(userEntity)
+    return ToUser(userEntity), nil
 }
 
-func (repository *UserRepository) FindAllUserTasks() []*trading.User {
+func (repository *UserRepository) FindAllUserTasks() ([]*trading.User, error) {
     query := `
     SELECT u.id as uid, u.address as address, u.amount as amount, u.points as points, t.name as name, tr.id as trid, tr.status as task_status, tr.amount as task_amount, tr.points as task_points FROM TaskRecord tr
     LEFT JOIN User0 u ON tr.user_id = u.id
@@ -90,7 +97,8 @@ func (repository *UserRepository) FindAllUserTasks() []*trading.User {
 
     rows, err := repository.client.Query(query)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("Query findAllUserTasks fail: %v", err)
+        return nil, err
     }
     defer rows.Close()
 
@@ -101,9 +109,10 @@ func (repository *UserRepository) FindAllUserTasks() []*trading.User {
         taskRecordEntity := &TaskRecordEntity{}
         taskEntity := &TaskEntity{}
 
-        err := rows.Scan(&userEntity.Id, &userEntity.Address, &userEntity.Amount, &userEntity.Points, &taskEntity.Name, &taskRecordEntity.Id, &taskRecordEntity.Status, &taskRecordEntity.Amount, &taskRecordEntity.Points)
+        err = rows.Scan(&userEntity.Id, &userEntity.Address, &userEntity.Amount, &userEntity.Points, &taskEntity.Name, &taskRecordEntity.Id, &taskRecordEntity.Status, &taskRecordEntity.Amount, &taskRecordEntity.Points)
         if err != nil {
-            log.Fatal(err)
+            log.Printf("Parse findAllUserTasks entity fail: %v", err)
+            return nil, err
         }
 
         _, exists := usersMap[userEntity.Address]
@@ -118,13 +127,14 @@ func (repository *UserRepository) FindAllUserTasks() []*trading.User {
         users = append(users, value)
     }
 
-    return users
+    return users, nil
 }
 
-func (repository *UserRepository) SaveAllUser(users []*trading.User) {
+func (repository *UserRepository) SaveAllUser(users []*trading.User) error {
     tx, err := repository.client.Begin()
     if err != nil {
-        log.Fatal(err)
+        log.Printf("Transaction saveAllUser fail: %v", err)
+        return err
     }
 
     query := `
@@ -133,7 +143,8 @@ func (repository *UserRepository) SaveAllUser(users []*trading.User) {
 
     rows, err := repository.client.Query(query)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("Query saveAllUser fail: %v", err)
+        return err
     }
 
     tasksMap := make(map[string]*TaskEntity)
@@ -141,23 +152,32 @@ func (repository *UserRepository) SaveAllUser(users []*trading.User) {
     for rows.Next() {
         task := &TaskEntity{}
 
-        err := rows.Scan(&task.Id, &task.Name)
+        err = rows.Scan(&task.Id, &task.Name)
         if err != nil {
-            log.Fatal(err)
+            log.Printf("Parse saveAllUser entity fail: %v", err)
+            return err
         }
         tasksMap[task.Name] = task
     }
 
-    mergeUser(tx, users)
-    mergeTaskRecord(tx, users, tasksMap)
+    err = mergeUser(tx, users)
+    if err != nil {
+        return err
+    }
+    err = mergeTaskRecord(tx, users, tasksMap)
+    if err != nil {
+        return err
+    }
 
     err = tx.Commit()
     if err != nil {
-        log.Fatal(err)
+        log.Printf("Commit saveAllUser fail: %v", err)
+        return err
     }
+    return nil
 }
 
-func mergeUser(tx *sql.Tx, users []*trading.User) {
+func mergeUser(tx *sql.Tx, users []*trading.User) error {
     query := `
     INSERT INTO user0 (id, address, amount, points, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6)
@@ -170,9 +190,11 @@ func mergeUser(tx *sql.Tx, users []*trading.User) {
 
     stmt, err := tx.Prepare(query)
     if err != nil {
+        log.Printf("Prepare mergeUser fail: %v", err)
         newErr := tx.Rollback()
         if newErr != nil {
-            log.Fatal(err)
+            log.Printf("Rollback mergeUser fail: %v", err)
+            return newErr
         }
     }
     defer stmt.Close()
@@ -181,15 +203,18 @@ func mergeUser(tx *sql.Tx, users []*trading.User) {
         entity := ToUserEntity(user)
         _, err = stmt.Exec(entity.Id, entity.Address, entity.Amount, entity.Points, entity.CreatedAt, entity.UpdatedAt)
         if err != nil {
+            log.Printf("Parse mergeUser entity fail: %v", err)
             newErr := tx.Rollback()
             if newErr != nil {
-                log.Fatal(err)
+                log.Printf("Rollback mergeUser entity fail: %v", err)
+                return newErr
             }
         }
     }
+    return nil
 }
 
-func mergeTaskRecord(tx *sql.Tx, users []*trading.User, tasksMap map[string]*TaskEntity) {
+func mergeTaskRecord(tx *sql.Tx, users []*trading.User, tasksMap map[string]*TaskEntity) error {
     query := `
     INSERT INTO taskrecord (id, user_id, task_id, status, amount, points, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -202,9 +227,11 @@ func mergeTaskRecord(tx *sql.Tx, users []*trading.User, tasksMap map[string]*Tas
     `
     stmt, err := tx.Prepare(query)
     if err != nil {
+        log.Printf("Prepare mergeTaskRecord fail: %v", err)
         newErr := tx.Rollback()
         if newErr != nil {
-            log.Fatal(err)
+            log.Printf("Rollback mergeTaskRecord fail: %v", err)
+            return newErr
         }
     }
     defer stmt.Close()
@@ -214,11 +241,14 @@ func mergeTaskRecord(tx *sql.Tx, users []*trading.User, tasksMap map[string]*Tas
             entity := ToTaskRecordEntity(taskRecord, user, tasksMap)
             _, err = stmt.Exec(entity.Id, entity.UserId, entity.TaskId, entity.Status, entity.Amount, entity.Points, entity.CreatedAt, entity.UpdatedAt)
             if err != nil {
+                log.Printf("Parse mergeTaskRecord entity fail: %v", err)
                 newErr := tx.Rollback()
                 if newErr != nil {
-                    log.Fatal(err)
+                    log.Printf("Rollback mergeTaskRecord entity fail: %v", err)
+                    return newErr
                 }
             }
         }
     }
+    return err
 }

@@ -1,6 +1,7 @@
 package application
 
 import (
+    "log"
     "tradingACE/main/trading"
     "tradingACE/main/trading/events"
 )
@@ -10,7 +11,12 @@ type GetLeaderboardQuery struct {
 }
 
 func (query *GetLeaderboardQuery) Execute(taskName string) *events.UsersEvent {
-    users := query.UserRepository.FindAllUserTasks()
+    users, err := query.UserRepository.FindAllUserTasks()
+    if err != nil {
+        log.Printf("FindAllUserTasks fail: %v", err)
+        return &events.UsersEvent{}
+    }
+
     if len(users) == 0 {
         return &events.UsersEvent{}
     }

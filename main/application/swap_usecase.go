@@ -15,16 +15,30 @@ type SwapUsecase struct {
 }
 
 func (usecase *SwapUsecase) Execute(address string, amount *big.Int) {
-    user := usecase.UserRepository.FindUserTasksByAddress(address)
+    user, err := usecase.UserRepository.FindUserTasksByAddress(address)
+    if err != nil {
+        log.Printf("FindUserTasksByAddress fail: %v", err)
+        return
+    }
+    
+    if user == nil {
+        return
+    }
+
     campaign := trading.NewCampaign()
     campaign.AddUsers(user)
     campaign.Swap(address, amount)
-    usecase.UserRepository.SaveAllUser(campaign.Users)
+    err = usecase.UserRepository.SaveAllUser(campaign.Users)
+    if err != nil {
+        log.Printf("SaveAllUser fail: %v", err)
+        return
+    }
 
     event := events.NewSwapEvent(campaign.Users[0], amount)
     eventData, err := json.Marshal(event)
     if err != nil {
-        log.Fatalf("Encode event fail: %v", err)
+        log.Printf("Encode event fail: %v", err)
+        return
     }
     usecase.EventHub.Publish(eventData)
 }

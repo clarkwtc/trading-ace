@@ -1,7 +1,6 @@
 package endpoints
 
 import (
-    "fmt"
     "github.com/ethereum/go-ethereum/common"
     "log"
     "math/big"
@@ -60,20 +59,20 @@ func (resource *CampaignResource) WatchSwapEvents() {
         log.Fatalf("Failed to subscribe swap: %v", err)
     }
 
-    fmt.Println("Listening swap events...")
+    log.Println("Listening swap events...")
 
     for {
         select {
-        case err := <-sub.Err():
-            log.Fatalf("Failed to receive events: %v", err)
+        case err = <-sub.Err():
+            log.Printf("Failed to receive events: %v", err)
         case event := <-eventChan:
-            fmt.Printf("Swap Event:\n")
-            fmt.Printf("Sender: %s\n", event.Sender.Hex())
-            fmt.Printf("USDCAmountIn: %s\n", utils.ForamtUSDC(event.Amount0In))
-            fmt.Printf("WETHAmountIn: %s\n", utils.ForamtEther(event.Amount1In))
-            fmt.Printf("USDCAmountOut: %s\n", utils.ForamtUSDC(event.Amount0Out))
-            fmt.Printf("WETHAmountOut: %s\n", utils.ForamtEther(event.Amount1Out))
-            fmt.Printf("To: %s\n", event.To.Hex())
+            log.Println("Swap Event:")
+            log.Printf("Sender: %s\n", event.Sender.Hex())
+            log.Printf("USDCAmountIn: %s\n", utils.ForamtUSDC(event.Amount0In))
+            log.Printf("WETHAmountIn: %s\n", utils.ForamtEther(event.Amount1In))
+            log.Printf("USDCAmountOut: %s\n", utils.ForamtUSDC(event.Amount0Out))
+            log.Printf("WETHAmountOut: %s\n", utils.ForamtEther(event.Amount1Out))
+            log.Printf("To: %s\n", event.To.Hex())
 
             resource.SwapUsecase.Execute(event.Sender.String(), getAmountVol(event))
         }

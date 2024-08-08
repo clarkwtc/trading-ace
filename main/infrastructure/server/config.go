@@ -39,12 +39,12 @@ func InitConfig() {
 
     err := viper.ReadInConfig()
     if err != nil {
-        log.Fatal("Could not read config", err)
+        log.Fatalf("Could not read config: %v", err)
     }
 
     err = viper.Unmarshal(&SystemConfig)
     if err != nil {
-        log.Fatal("Unable to decode config", err)
+        log.Fatalf("Unable to decode config: %v", err)
     }
 
     setCampaignMode()

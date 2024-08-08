@@ -2,7 +2,6 @@ package endpoints
 
 import (
     "database/sql"
-    "fmt"
     "github.com/gin-gonic/gin"
     "github.com/spf13/viper"
     "log"
@@ -12,6 +11,7 @@ import (
     "tradingACE/main/infrastructure/repositories"
     "tradingACE/main/infrastructure/server"
     "tradingACE/main/trading"
+    "tradingACE/main/trading/errors"
 )
 
 type Router struct {
@@ -31,6 +31,12 @@ func (router *Router) SetupUserResource() {
     }
 }
 
+func (router *Router) SetupErrorMiddleware() {
+    errorMiddleware := ErrorMiddleware{}
+    errorMiddleware.RegisterException(errors.NewNotExistUserErrorHandler())
+    router.Engine.Use(errorMiddleware.Execute())
+}
+
 func (router *Router) SetupWebsocketConnection() {
     websocketEndpoints := &WebsocketConnection{router.EventHub}
 
@@ -41,7 +47,7 @@ func (router *Router) SetupWebsocketConnection() {
 }
 
 func (router *Router) SetupCampaignTimer() {
-    fmt.Println(viper.Get("campaign_mode"))
+    log.Println(viper.Get("campaign_mode"))
     if trading.ParseCampaignMode(viper.GetString("campaign_mode")) != trading.CurrentActiveMode {
         return
     }

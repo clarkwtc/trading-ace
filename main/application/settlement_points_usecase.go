@@ -14,7 +14,12 @@ type SettlementPointsUsecase struct {
 }
 
 func (usecase *SettlementPointsUsecase) Execute(final bool) {
-    users := usecase.UserRepository.FindAllUserTasks()
+    users, err := usecase.UserRepository.FindAllUserTasks()
+    if err != nil {
+        log.Printf("FindAllUserTasks fail: %v", err)
+        return
+    }
+    
     if len(users) == 0 {
         return
     }
@@ -22,12 +27,17 @@ func (usecase *SettlementPointsUsecase) Execute(final bool) {
     campaign := trading.NewCampaign()
     campaign.Users = users
     campaign.Settlement(final)
-    usecase.UserRepository.SaveAllUser(users)
+    err = usecase.UserRepository.SaveAllUser(users)
+    if err != nil {
+        log.Printf("SaveAllUser fail: %v", err)
+        return
+    }
 
     event := events.NewSettlementPointsEvent(campaign.Users)
     eventData, err := json.Marshal(event)
     if err != nil {
-        log.Fatalf("Encode event fail: %v", err)
+        log.Printf("Encode event fail: %v", err)
+        return
     }
     usecase.EventHub.Publish(eventData)
 }

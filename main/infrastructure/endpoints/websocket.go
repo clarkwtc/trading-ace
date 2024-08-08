@@ -39,6 +39,7 @@ func (socket *WebsocketConnection) close(client *eventhub.Client) {
     socket.EventHub.UnSubscribe(client)
     err := client.Connection.Close()
     if err != nil {
+        log.Printf("Could not to close websocket connection: %v", err)
         return
     }
 }
@@ -47,7 +48,7 @@ func (socket *WebsocketConnection) handleReadMessage(client *eventhub.Client) {
     for {
         _, message, err := client.Connection.ReadMessage()
         if err != nil {
-            log.Println("Read message fail:", err)
+            log.Printf("Read message fail: %v", err)
             break
         }
 

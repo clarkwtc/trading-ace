@@ -14,12 +14,12 @@ func Init() *sql.DB {
         database.Host, database.Port, database.User, database.Password, database.Name, database.SSLMode, database.TimeZone)
     client, err := sql.Open("postgres", psqlInfo)
     if err != nil {
-        log.Fatal(err)
+        log.Fatalf("Could not create a connection:%v", err)
     }
 
     err = client.Ping()
     if err != nil {
-        log.Fatal("Could not connect to PostgreSQL", err)
+        log.Fatalf("Could not connect to PostgreSQL:%v", err)
     }
 
     log.Println("Connected to PostgreSQL")

@@ -21,7 +21,7 @@ func ParseCampaignModeName(mode CampaignMode) string {
     case CurrentActiveMode:
         return "CurrentActiveMode"
     default:
-        log.Fatalf("Not support mode %v", mode)
+        log.Printf("Not support mode %v", mode)
     }
     return ""
 }
@@ -34,7 +34,7 @@ func ParseCampaignMode(modeName string) CampaignMode {
     case strings.ToLower("CurrentActiveMode"):
         return CurrentActiveMode
     default:
-        log.Fatalf("Not support mode %v", modeName)
+        log.Printf("Not support mode %v", modeName)
     }
     return -1
 }
