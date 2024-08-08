@@ -27,7 +27,7 @@ func (router *Router) SetupUserResource() {
     {
         userRoutes.GET("/:address/getTaskStatus", userEndpoints.GetUserTasksStatus)
         userRoutes.GET("/:address/getPointsHistory", userEndpoints.GetUserPointsHistory)
-        userRoutes.GET("/:address/getLeaderboard", userEndpoints.GetLeaderboard)
+        userRoutes.GET("/getLeaderboard", userEndpoints.GetLeaderboard)
     }
 }
 
