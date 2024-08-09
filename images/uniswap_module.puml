@@ -1,0 +1,40 @@
+@startuml
+
+class UniswapUser{
+    -address: string
+    +swap(amount0Out: double, amount1Out: double): void
+}
+
+UniswapUser ..> Uniswap:Operate
+
+class Uniswap <<Third-Party>>{
+    +swap(amount0Out: double, amount1Out: double, to: string, data: byte[0...*]): void
+}
+
+Uniswap ..> Etherscan:Publish
+Uniswap "1 " o--> "0...* " SwapEvent
+
+class SwapEvent{
+    -sender: string
+    -amount0In: double
+    -amount1In: double
+    -amount0Out: double
+    -amount1Out: double
+    -to: string
+}
+
+class Etherscan <<Third-Party>>{
+    +receive(event: SwapEvent): void
+}
+
+interface UniswapV2PairABI{
+    +NewUniswapV2Filter(pairAddress: string, client: EthClient): void
+    +WatchEvent(): SwapEvent
+}
+
+UniswapV2PairABI "1 -observer" --> "1 " Etherscan:Watch
+UniswapV2PairABI "1 " --> "1 " EthClient:"Connect"
+class EthClient <<Third-Party>>{
+}
+
+@enduml

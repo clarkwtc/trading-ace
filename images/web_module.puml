@@ -1,0 +1,52 @@
+@startuml
+
+class Router{
+    +SetupUserResource(): void
+    +SetupWebsocketConnection(): void
+    +SetupCampaignTimer(): void
+}
+
+Router "1 " o--> "1 " GinEngine
+
+class GinEngine <<Third-Party>>{
+}
+
+GinEngine  "1 " o--> "1 " CampaignResource
+GinEngine  "1 " o--> "1 " UserResource
+GinEngine  "1 " --> "1 " WebsocketConnection
+
+class CampaignResource{
+    +SettlementPoints(): void
+    +WatchSwapEvents(): void
+}
+
+CampaignResource ..> EventHub:Publish
+
+class UserResource{
+    +GetUserTasksStatus(address: string): void
+    +GetUserPointsHistory(address: string): void
+    +GetLeaderboard(task: string): void
+}
+
+class WebsocketConnection{
+    +BindConnection(): void
+}
+
+WebsocketConnection "1 " o--> "1 " EventHub
+
+class EventHub{
+    -subscribers: Subscription
+    +Subscribe(topic: string, client: Client): void
+    +Unsubscribe(topic: string, client: Client): void
+    +Publish(topic: string, message: string): void
+}
+
+EventHub "1 " *--> "1 " Subscription
+
+Subscription [topic: string] "\n 1 " o--> "0...*\n value" Client
+
+class Client{
+    -connection: string
+    -send: byte[*]
+}
+@enduml

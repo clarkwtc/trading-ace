@@ -1,0 +1,101 @@
+@startuml
+
+class Campaign{
+    +Swap(address: string, amount: double)
+    +Settlement(final: bool)
+}
+
+Campaign "1 " o--> "1 " CampaignMode
+Campaign "1 " *--> "0...* " User
+
+note right of Campaign::Swap
+    Based on the proportion of user's swap volume (USD) among all users on {Target Pool}
+    1. User swap amount
+    2. Join user in campaign
+    3. Give onboard task to user
+end note
+
+note right of Campaign::Settlement
+    At the end of the campaign,
+    users will get rewards based on how
+    many points they accumulate.
+end note
+
+enum CampaignMode{
+    PastBacktestMode
+    CurrentActiveMode
+}
+
+class User{
+    -id: string
+    -address: string
+    -totalAmount: double
+    -totalPoints: int
+    +AddPoint(point: int): void
+    +AddAmount(amount: double): void
+    +AcceptTask(task: Task): void
+}
+
+class TaskRecord{
+    -id:string
+    -swapAmount:double
+    -earnPoints:int
+    -completedTime: long
+    +SetEarnPoints(point:int): void
+    +AddSwapAmount(amount: double)) void
+    +Completed(): void
+}
+
+User "1 " - "0...* " Task
+(User, Task) .. TaskRecord
+TaskRecord "1 " *-- "1 " TaskStatus
+
+enum TaskStatus{
+    OnGoing
+    Completed
+}
+
+abstract Task{
+    -name: string
+    -rewardPoint: int
+    +GetUser(): User
+    +IsTargetUser(user: User): bool
+}
+
+class OnboardingTask extends Task{
+    -name: string = OnboardingTask
+    -rewardPoint: int = 1000
+    +getRewardPoint(): int
+    +Completed(amount: double)
+    +isRequiredAmount(amount: double): void
+    +reward(): void
+}
+
+note right of OnboardingTask::isRequiredAmount
+    The user needs to swap at least 1000u
+    Users will get 100 points immediately when they complete it
+end note
+
+class SharePoolTask extends Task{
+    -name: string = SharePoolTask
+    -rewardPoint: int = 10000
+    +getRewardPoint(addedAmount: double, allUserAmount: double): int
+    +Completed(allUserAmount: double, final: bool): void
+    +isCompletedPredecessorTasks(): bool
+    +reward(allUserAmount: double): void
+    +nextTask(): void
+}
+
+note top of SharePoolTask
+    Tasks are calculated on a weekly basis, except for the onboarding task.
+end note
+
+note right of SharePoolTask::isCompletedPredecessorTasks
+    The user needs to complete the onboarding task when we distribute the points
+end note
+
+note right of SharePoolTask::"reward(allUserAmount: double)"
+    Users could share the points pool of 10,000 points at the end of the task
+end note
+
+@enduml

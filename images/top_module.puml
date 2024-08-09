@@ -1,0 +1,31 @@
+@startuml
+
+node "WebEngine" {
+    [UserResource]
+    [CampaignResource]
+}
+
+[CampaignResource] --> [Trading]
+[WebEngine] --> [Postgresql]
+
+node "Trading" {
+}
+
+node "Uniswap" {
+   ABI - [Contract]
+   [WebEngine] --> ABI
+}
+
+database "Postgresql" {
+  frame User0 {
+  }
+  frame TaskRecord {
+  }
+  frame Task {
+  }
+
+  User0 o--> TaskRecord
+  Task o--> TaskRecord
+}
+
+@enduml
