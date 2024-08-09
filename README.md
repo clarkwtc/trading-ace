@@ -84,4 +84,18 @@ docker-compose down
 ```
 
 ## System designing diagram
-![alt text](images/TradingAceDesign.png)
+Top Module
+
+![alt text](images/TopModule.svg)
+
+Web Module
+
+![alt text](images/WebModule.svg)
+
+Core Module
+
+![alt text](images/TradingModule.svg)
+
+Uniswap Module
+
+![alt text](images/UniswapModule.svg)
